@@ -1,36 +1,128 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Forez Inmobiliaria - Web premium Next.js
 
-## Getting Started
+Aplicación web para **Forez Inmobiliaria**, una inmobiliaria premium enfocada en propiedades de alto nivel en **Bucaramanga, Bogotá, Medellín y otras ciudades de Colombia**.
 
-First, run the development server:
+### Tecnología principal
+
+- **Next.js 16** (App Router, React 19, TypeScript)
+- **Tailwind CSS v4**
+- **shadcn/ui** (componentes `Button`, `Card`, `Input`, `Sheet`, etc.)
+- **Framer Motion** para animaciones suaves
+- **Supabase** para autenticación y backend
+
+---
+
+## Requisitos previos
+
+- Node.js 18+ instalado.
+- Cuenta y proyecto en [Supabase](https://supabase.com).
+
+---
+
+## Instalación y arranque
+
+1. Clonar o copiar el proyecto en tu máquina.
+2. Instalar dependencias:
+
+```bash
+npm install
+```
+
+3. Crear el archivo `.env.local` en la raíz del proyecto tomando como referencia `.env.example`:
+
+```bash
+cp .env.example .env.local
+```
+
+4. Configurar variables de entorno en `.env.local`:
+
+```bash
+NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase_aqui
+NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_anon_key_de_supabase_aqui
+NEXT_PUBLIC_MAPBOX_TOKEN=tu_mapbox_token_aqui
+```
+
+Estos valores los encuentras en el panel de tu proyecto Supabase (`Project Settings` → `API`).
+
+5. Ejecutar el servidor de desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La aplicación estará disponible en `http://localhost:3000`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Estructura principal del proyecto
 
-## Learn More
+- `app/layout.tsx`: Layout raíz, **Navbar** con logo de Forez, navegación principal y pie de página.
+- `app/page.tsx`: Home con **hero** impactante, búsqueda avanzada, propiedades destacadas y **mapa 3D (Mapbox)**.
+- `app/propiedades/page.tsx`: Grid de tarjetas de propiedades con datos mock (imagen, título, precio, ubicación, habitaciones, baños y m²).
+- `app/auth/page.tsx`: Pantalla de autenticación usando **Supabase Auth UI** (login/register con email/contraseña).
+- `components/navbar.tsx`: Barra de navegación superior, versión desktop + mobile (con `Sheet` de shadcn/ui).
+- `components/ui/*`: Componentes base de shadcn/ui (Button, Card, Input, Sheet).
+- `lib/supabase.ts`: Inicialización del cliente de Supabase usando variables de entorno públicas.
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Diseño y branding
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+- **Tema premium claro**: fondos blancos/gris claro con acentos azules.
+- Color de acento principal: `#0A2540` (botones y elementos clave).
+- Tipografía principal: **Inter** (cargada vía `next/font`).
+- Navbar incluye:
+  - Logo con `<Image src="/logo.png" alt="Forez Inmobiliaria" />`.
+  - Links: Inicio, Propiedades, Sobre Nosotros, Contacto.
+  - Botones de **Ingresar** y **Crear cuenta**.
 
-## Deploy on Vercel
+> Nota: puedes reemplazar `public/logo.png` por el archivo definitivo respetando el mismo nombre o actualizar la ruta en `components/navbar.tsx`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Supabase e inicio de sesión
+
+- Cliente configurado en `lib/supabase.ts` con:
+  - `process.env.NEXT_PUBLIC_SUPABASE_URL`
+  - `process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- Pantalla `/auth`:
+  - Usa `@supabase/auth-ui-react` para login y registro con email/contraseña.
+  - Cambia entre **login** y **register** mediante el query param `mode`:
+    - `/auth?mode=login`
+    - `/auth?mode=register`
+
+Puedes personalizar completamente el flujo y los formularios de autenticación más adelante si lo prefieres.
+
+---
+
+## Logo y assets
+
+1. Añade tu logo en `public/logo.png`.
+2. El Navbar ya usa:
+
+```tsx
+<Image src="/logo.png" alt="Forez Inmobiliaria" fill className="object-contain" />
+```
+
+Si el archivo tiene otro nombre o formato, actualiza esta referencia en `components/navbar.tsx`.
+
+---
+
+## Scripts disponibles
+
+- `npm run dev`: Arranca el servidor de desarrollo.
+- `npm run build`: Genera el build de producción.
+- `npm run start`: Inicia el servidor en modo producción.
+- `npm run lint`: Ejecuta el linter.
+
+---
+
+## Próximos pasos recomendados
+
+- Conectar la lista de propiedades a tablas reales en Supabase.
+- Ajustar el estilo y zoom del mapa 3D según ciudad/portafolio.
+- Añadir páginas de **Sobre Nosotros** y **Contacto** con contenido corporativo.
+- Ampliar el sistema de filtros de propiedades (rango de precios, tipo, número de habitaciones, etc.).
+
+Este proyecto está preparado para crecer hacia una plataforma inmobiliaria premium con backend en Supabase y un frontend moderno en Next.js 16.
+
