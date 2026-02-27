@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import mapboxgl from "mapbox-gl";
 
@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 const ciudades = ["Bucaramanga", "Bogotá", "Medellín", "Cali", "Cartagena"];
 
-export default function PublicarPage() {
+function PublicarPropiedadForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editId = searchParams.get("edit");
@@ -822,6 +822,14 @@ function MapPicker({
         });
       }}
     />
+  );
+}
+
+export default function PublicarPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-[40vh] items-center justify-center text-slate-500">Cargando...</div>}>
+      <PublicarPropiedadForm />
+    </Suspense>
   );
 }
 

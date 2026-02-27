@@ -308,7 +308,7 @@ export function ProyectoDetailClient({ project }: { project: ProjectForDetail })
                   <button
                     type="button"
                     className="relative block w-full aspect-video text-left transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                    onClick={() => openViewer("video", videoEmbedUrl, "Video del proyecto")}
+                    onClick={() => openViewer([{ type: "video" as const, url: videoEmbedUrl, title: "Video del proyecto" }], 0)}
                   >
                     <iframe
                       src={videoEmbedUrl}

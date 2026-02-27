@@ -241,7 +241,7 @@ export default function PropertyDetail({
                   }
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && openMediaViewer("image", activeImage, property.titulo)}
+                  onKeyDown={(e) => e.key === "Enter" && openMediaViewer(images.map((img, i) => ({ type: "image" as const, url: img, title: `${property.titulo} — Imagen ${i + 1}` })), activeIdx)}
                   aria-label="Ver imagen en grande"
                 >
                   <Image
