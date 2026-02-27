@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { AdminEditProjectButton } from "@/components/AdminEditProjectButton";
 import { EntornoPanel } from "@/components/EntornoPanel";
 import type { MediaItem, MediaViewerType } from "@/components/MediaViewerModal";
@@ -80,6 +81,8 @@ export function ProyectoDetailClient({ project }: { project: ProjectForDetail })
   const [leadMessage, setLeadMessage] = useState(
     `Estoy interesado en el proyecto "${project.titulo}" en ${project.ciudad}.`,
   );
+  const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
 
   const openViewer = (items: MediaItem[], index: number) => {
     setViewerItems(items);
@@ -96,6 +99,26 @@ export function ProyectoDetailClient({ project }: { project: ProjectForDetail })
         : [];
   const additionalImages = project.images.slice(1);
   const videoEmbedUrl = project.video_url ? getYouTubeEmbedUrl(project.video_url) : null;
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (!mounted) return;
+        if (data.user?.email === "forezinmobiliaria@gmail.com") {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) setIsAdmin(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   async function handleLeadSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -125,6 +148,27 @@ export function ProyectoDetailClient({ project }: { project: ProjectForDetail })
       toast.error("No se pudo enviar tu solicitud. Intenta de nuevo.");
     } finally {
       setLeadLoading(false);
+    }
+  }
+
+  async function handleDeleteProject() {
+    const confirm = window.confirm(
+      `¿Seguro que deseas eliminar el proyecto "${project.titulo}"? Esta acción no se puede deshacer.`,
+    );
+    if (!confirm) return;
+    try {
+      const { error } = await supabase
+        .from("projects")
+        .delete()
+        .eq("id", project.id);
+      if (error) {
+        toast.error("No se pudo eliminar el proyecto. Intenta de nuevo.");
+        return;
+      }
+      toast.success("Proyecto eliminado correctamente.");
+      router.push("/proyectos");
+    } catch {
+      toast.error("No se pudo eliminar el proyecto. Intenta de nuevo.");
     }
   }
 
@@ -165,9 +209,19 @@ export function ProyectoDetailClient({ project }: { project: ProjectForDetail })
                   Desde {formatCOP(project.precio)}
                 </p>
               )}
-              <div className="pt-2">
-                <AdminEditProjectButton projectId={project.id} />
-              </div>
+              {isAdmin && (
+                <div className="pt-2 space-y-1.5">
+                  <AdminEditProjectButton projectId={project.id} />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleDeleteProject}
+                    className="border-red-500 text-[11px] font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    Eliminar proyecto
+                  </Button>
+                </div>
+              )}
             </div>
 
             <button

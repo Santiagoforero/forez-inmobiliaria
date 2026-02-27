@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   Bath,
@@ -105,6 +106,7 @@ export default function PropertyDetail({
     usdRate && usdRate > 0 ? Math.round(property.precio * usdRate) : null;
 
   const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     let mounted = true;
@@ -157,6 +159,28 @@ export default function PropertyDetail({
     }
   }
 
+  async function handleDeleteProperty() {
+    if (!property.remoteId) return;
+    const confirm = window.confirm(
+      `¿Seguro que deseas eliminar la propiedad "${property.titulo}"? Esta acción no se puede deshacer.`,
+    );
+    if (!confirm) return;
+    try {
+      const { error } = await supabase
+        .from("properties")
+        .delete()
+        .eq("id", property.remoteId);
+      if (error) {
+        toast.error("No se pudo eliminar la propiedad. Intenta de nuevo.");
+        return;
+      }
+      toast.success("Propiedad eliminada correctamente.");
+      router.push("/propiedades");
+    } catch {
+      toast.error("No se pudo eliminar la propiedad. Intenta de nuevo.");
+    }
+  }
+
   return (
     <div className="bg-slate-50">
       <section className="border-b border-slate-200 bg-white">
@@ -204,7 +228,7 @@ export default function PropertyDetail({
                 </p>
               )}
               {isAdmin && property.remoteId && (
-                <div>
+                <div className="space-y-1.5">
                   <Button
                     asChild
                     variant="outline"
@@ -213,6 +237,14 @@ export default function PropertyDetail({
                     <Link href={`/publicar?edit=${property.remoteId}`}>
                       Editar esta propiedad
                     </Link>
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleDeleteProperty}
+                    className="border-red-500 text-[11px] font-semibold text-red-600 hover:bg-red-50"
+                  >
+                    Eliminar propiedad
                   </Button>
                 </div>
               )}

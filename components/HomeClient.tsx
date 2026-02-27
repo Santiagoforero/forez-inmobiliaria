@@ -46,14 +46,13 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
   const [presupuestoMaxNumero, setPresupuestoMaxNumero] = useState<number | null>(null);
 
   const destacadas = useMemo(() => {
-    const list = initialProperties.slice(0, 8);
     const q = busquedaInteligente
       .toLowerCase()
       .normalize("NFD")
       .replace(/\p{Diacritic}/gu, "")
       .trim();
     const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
-    return list.filter((p) => {
+    const filtradas = initialProperties.filter((p) => {
       if (presupuestoMaxNumero != null && p.precio > presupuestoMaxNumero) {
         return false;
       }
@@ -72,6 +71,7 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
         .replace(/\p{Diacritic}/gu, "");
       return tokens.every((t) => hay.includes(t));
     });
+    return filtradas.slice(0, 8);
   }, [busquedaInteligente, initialProperties, presupuestoMaxNumero]);
 
   return (
@@ -191,19 +191,17 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
                 className="grid gap-3 sm:grid-cols-4"
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const tokens = [
-                    ciudadAvanzada.trim(),
-                    tipoAvanzado.trim(),
-                    presupuestoAvanzado.trim(),
-                  ].filter(Boolean);
+                  const ciudadToken = ciudadAvanzada.trim();
+                  const tipoToken = tipoAvanzado.trim();
 
-                  // Presupuesto se interpreta como tope máximo numérico
+                  // Presupuesto se interpreta como tope máximo numérico (no entra al texto)
                   const cleaned = presupuestoAvanzado.replace(/\D/g, "");
                   const maxNumber = cleaned ? Number(cleaned) : null;
                   setPresupuestoMaxNumero(maxNumber);
 
-                  if (tokens.length === 0 && maxNumber == null) return;
-                  setBusquedaInteligente(tokens.join(" "));
+                  const tokensTexto = [ciudadToken, tipoToken].filter(Boolean);
+                  if (tokensTexto.length === 0 && maxNumber == null) return;
+                  setBusquedaInteligente(tokensTexto.join(" "));
                   const anchor = document.getElementById("destacadas");
                   if (anchor) {
                     anchor.scrollIntoView({ behavior: "smooth", block: "start" });

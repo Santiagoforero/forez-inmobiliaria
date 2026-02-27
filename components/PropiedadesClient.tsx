@@ -244,19 +244,30 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
                     className="mt-2 h-8 border-slate-300 bg-white text-xs"
                     value={precioMaxTexto}
                     onChange={(e) => {
-                      setPrecioMaxTexto(e.target.value);
-                    }}
-                    onBlur={() => {
-                      const digits = precioMaxTexto.replace(/\D/g, "");
+                      const digits = e.target.value.replace(/\D/g, "");
                       if (!digits) {
-                        setPrecioMax(maxPrecio);
-                        setPrecioMaxTexto(formatEntero(maxPrecio));
+                        setPrecioMaxTexto("");
                         return;
                       }
                       const num = Number(digits);
                       const clamped = Math.min(Math.max(num, minPrecio), maxPrecio);
                       setPrecioMax(clamped);
-                      setPrecioMaxTexto(formatEntero(clamped));
+                      setPrecioMaxTexto(
+                        digits.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+                      );
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const digits = precioMaxTexto.replace(/\D/g, "");
+                        if (!digits) return;
+                        const num = Number(digits);
+                        const clamped = Math.min(Math.max(num, minPrecio), maxPrecio);
+                        setPrecioMax(clamped);
+                        setPrecioMaxTexto(
+                          digits.replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+                        );
+                      }
                     }}
                     placeholder="Máximo COP"
                   />
@@ -285,17 +296,16 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
                     onChange={(e) => {
                       setMetrosMinTexto(e.target.value);
                     }}
-                    onBlur={() => {
-                      const digits = metrosMinTexto.replace(/\D/g, "");
-                      if (!digits) {
-                        setMetrosMin(minMetros);
-                        setMetrosMinTexto(String(minMetros));
-                        return;
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        const digits = metrosMinTexto.replace(/\D/g, "");
+                        if (!digits) return;
+                        const num = Number(digits);
+                        const clamped = Math.min(Math.max(num, minMetros), maxMetros);
+                        setMetrosMin(clamped);
+                        setMetrosMinTexto(String(clamped));
                       }
-                      const num = Number(digits);
-                      const clamped = Math.min(Math.max(num, minMetros), maxMetros);
-                      setMetrosMin(clamped);
-                      setMetrosMinTexto(String(clamped));
                     }}
                     placeholder="Mínimo m²"
                   />
@@ -328,6 +338,24 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
                     })}
                   </div>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBusquedaInteligente("");
+                    setCiudad("todas");
+                    setSegmento("todas");
+                    setTiposSeleccionados([]);
+                    setHabSeleccionadas([]);
+                    setPrecioMax(maxPrecio);
+                    setPrecioMaxTexto(formatEntero(maxPrecio));
+                    setMetrosMin(minMetros);
+                    setMetrosMinTexto(String(minMetros));
+                  }}
+                  className="mt-2 w-full rounded-full border border-slate-300 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 hover:border-slate-400 hover:bg-slate-50"
+                >
+                  Limpiar filtros
+                </button>
 
                 <div className="space-y-1.5">
                   <p className="font-medium">Habitaciones</p>
