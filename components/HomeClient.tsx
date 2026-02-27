@@ -82,7 +82,7 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
       </div>
 
       <section className="relative">
-        <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-none absolute inset-0 z-0">
           {/* PC: gradiente + foto a la derecha (mitad azul, mitad foto), máxima nitidez */}
           <div className="absolute inset-0 hidden lg:block">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(191,219,254,0.9)_0,#e5e7eb_45%,#f9fafb_100%)]" />
@@ -284,7 +284,7 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
         </div>
       </section>
 
-      <section className="border-t border-slate-200 bg-slate-50">
+      <section className="relative z-10 border-t border-slate-200 bg-slate-50">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
             <div>
