@@ -48,6 +48,14 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
     new Set(initialProperties.map((p) => p.habitaciones)),
   ).sort((a, b) => a - b);
 
+  const formatEntero = (value: number) =>
+    new Intl.NumberFormat("es-CO", {
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  const [precioMaxTexto, setPrecioMaxTexto] = useState(formatEntero(maxPrecio));
+  const [metrosMinTexto, setMetrosMinTexto] = useState(String(minMetros));
+
   function inferCategoria(tipo: string | undefined): "residencial" | "lote" | "comercial" {
     if (!tipo) return "residencial";
     const t = tipo.toLowerCase();
@@ -110,7 +118,7 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
 
   return (
     <div className="bg-white">
-      <section className="border-b border-slate-200 bg-gradient-to-b from-white via-slate-50 to-slate-100">
+      <section className="border-b border-slate-200 bg-linear-to-b from-white via-slate-50 to-slate-100">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
           <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div className="space-y-3">
@@ -119,7 +127,7 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
               </p>
               <h1 className="text-balance text-2xl font-semibold tracking-tight text-slate-900 sm:text-4xl lg:text-5xl">
                 Propiedades premium en{" "}
-                <span className="bg-gradient-to-r from-sky-400 to-sky-200 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-sky-400 to-sky-200 bg-clip-text text-transparent">
                   Colombia
                 </span>
               </h1>
@@ -223,7 +231,34 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
                     min={minPrecio}
                     max={maxPrecio}
                     step={50000000}
-                    onValueChange={([v]) => setPrecioMax(v)}
+                    onValueChange={([v]) => {
+                      setPrecioMax(v);
+                      setPrecioMaxTexto(
+                        new Intl.NumberFormat("es-CO", {
+                          maximumFractionDigits: 0,
+                        }).format(v),
+                      );
+                    }}
+                  />
+                  <Input
+                    className="mt-2 h-8 border-slate-300 bg-white text-xs"
+                    value={precioMaxTexto}
+                    onChange={(e) => {
+                      setPrecioMaxTexto(e.target.value);
+                    }}
+                    onBlur={() => {
+                      const digits = precioMaxTexto.replace(/\D/g, "");
+                      if (!digits) {
+                        setPrecioMax(maxPrecio);
+                        setPrecioMaxTexto(formatEntero(maxPrecio));
+                        return;
+                      }
+                      const num = Number(digits);
+                      const clamped = Math.min(Math.max(num, minPrecio), maxPrecio);
+                      setPrecioMax(clamped);
+                      setPrecioMaxTexto(formatEntero(clamped));
+                    }}
+                    placeholder="Máximo COP"
                   />
                 </div>
 
@@ -239,7 +274,30 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
                     min={minMetros}
                     max={maxMetros}
                     step={10}
-                    onValueChange={([v]) => setMetrosMin(v)}
+                    onValueChange={([v]) => {
+                      setMetrosMin(v);
+                      setMetrosMinTexto(String(v));
+                    }}
+                  />
+                  <Input
+                    className="mt-2 h-8 border-slate-300 bg-white text-xs"
+                    value={metrosMinTexto}
+                    onChange={(e) => {
+                      setMetrosMinTexto(e.target.value);
+                    }}
+                    onBlur={() => {
+                      const digits = metrosMinTexto.replace(/\D/g, "");
+                      if (!digits) {
+                        setMetrosMin(minMetros);
+                        setMetrosMinTexto(String(minMetros));
+                        return;
+                      }
+                      const num = Number(digits);
+                      const clamped = Math.min(Math.max(num, minMetros), maxMetros);
+                      setMetrosMin(clamped);
+                      setMetrosMinTexto(String(clamped));
+                    }}
+                    placeholder="Mínimo m²"
                   />
                 </div>
 

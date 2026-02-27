@@ -6,6 +6,13 @@ import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { PropertyCard } from "@/components/property-card";
 import PropertyMap from "@/components/PropertyMap";
 import type { Property } from "@/lib/properties";
@@ -36,6 +43,8 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
     };
   }, [initialProperties]);
 
+  const [presupuestoMaxNumero, setPresupuestoMaxNumero] = useState<number | null>(null);
+
   const destacadas = useMemo(() => {
     const list = initialProperties.slice(0, 8);
     const q = busquedaInteligente
@@ -43,17 +52,27 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
       .normalize("NFD")
       .replace(/\p{Diacritic}/gu, "")
       .trim();
-    if (!q) return list;
-    const tokens = q.split(/\s+/).filter(Boolean);
+    const tokens = q ? q.split(/\s+/).filter(Boolean) : [];
     return list.filter((p) => {
-      const hay = [p.titulo, p.descripcionCorta, p.descripcionLarga, p.ciudad, p.barrio ?? "", p.tipo]
+      if (presupuestoMaxNumero != null && p.precio > presupuestoMaxNumero) {
+        return false;
+      }
+      if (tokens.length === 0) return true;
+      const hay = [
+        p.titulo,
+        p.descripcionCorta,
+        p.descripcionLarga,
+        p.ciudad,
+        p.barrio ?? "",
+        p.tipo,
+      ]
         .join(" ")
         .toLowerCase()
         .normalize("NFD")
         .replace(/\p{Diacritic}/gu, "");
       return tokens.every((t) => hay.includes(t));
     });
-  }, [busquedaInteligente, initialProperties]);
+  }, [busquedaInteligente, initialProperties, presupuestoMaxNumero]);
 
   return (
     <div className="relative overflow-hidden bg-slate-50">
@@ -108,7 +127,7 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
             <div className="pointer-events-none absolute -left-16 -top-20 h-52 w-52 rounded-full bg-sky-300/15 blur-3xl" />
 
             {/* Tarjeta luminosa con la foto, anclada a la derecha */}
-            <div className="pointer-events-none absolute bottom-[-6%] right-[-18%] h-[56%] w-[76%] rotate-[-3deg]">
+            <div className="pointer-events-none absolute bottom-[-6%] right-[-18%] h-[56%] w-[76%] -rotate-3">
               <div className="relative h-full w-full overflow-hidden rounded-3xl border border-white/70 bg-white shadow-xl shadow-slate-300/70">
                 <Image
                   src={HERO_IMAGE_URL}
@@ -142,7 +161,7 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
               </span>
             </h1>
             <p className="max-w-lg text-pretty text-sm text-slate-600 sm:text-base">
-              Compra inmuebles, lotes, proyectos sobre planos y activos
+              Compraventa de inmuebles, lotes, proyectos sobre planos y activos
               comerciales o industriales en Bucaramanga, Bogotá, Medellín y las
               principales ciudades del país. Asesoría de inversión, curaduría
               de portafolios y un servicio diseñado para clientes exigentes.
@@ -177,7 +196,13 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
                     tipoAvanzado.trim(),
                     presupuestoAvanzado.trim(),
                   ].filter(Boolean);
-                  if (tokens.length === 0) return;
+
+                  // Presupuesto se interpreta como tope máximo numérico
+                  const cleaned = presupuestoAvanzado.replace(/\D/g, "");
+                  const maxNumber = cleaned ? Number(cleaned) : null;
+                  setPresupuestoMaxNumero(maxNumber);
+
+                  if (tokens.length === 0 && maxNumber == null) return;
                   setBusquedaInteligente(tokens.join(" "));
                   const anchor = document.getElementById("destacadas");
                   if (anchor) {
@@ -208,7 +233,13 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
                   </label>
                   <Input
                     value={presupuestoAvanzado}
-                    onChange={(e) => setPresupuestoAvanzado(e.target.value)}
+                    onChange={(e) =>
+                      setPresupuestoAvanzado(
+                        e.target.value
+                          .replace(/\D/g, "")
+                          .replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+                      )
+                    }
                     placeholder="$1.000.000.000"
                     className="border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400"
                   />
@@ -217,12 +248,26 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
                   <label className="mb-1 block text-xs font-medium text-slate-500">
                     Tipo de propiedad
                   </label>
-                  <Input
-                    value={tipoAvanzado}
-                    onChange={(e) => setTipoAvanzado(e.target.value)}
-                    placeholder="Apartamento, casa..."
-                    className="border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400"
-                  />
+                  <Select
+                    value={tipoAvanzado || "todas"}
+                    onValueChange={(value) =>
+                      setTipoAvanzado(value === "todas" ? "" : value)
+                    }
+                  >
+                    <SelectTrigger className="border-slate-200 bg-white text-sm text-slate-900 placeholder:text-slate-400">
+                      <SelectValue placeholder="Todos los tipos" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="todas">Todos</SelectItem>
+                      <SelectItem value="Apartamento">Apartamento</SelectItem>
+                      <SelectItem value="Casa">Casa</SelectItem>
+                      <SelectItem value="Oficina">Oficina</SelectItem>
+                      <SelectItem value="Local">Local</SelectItem>
+                      <SelectItem value="Bodega">Bodega</SelectItem>
+                      <SelectItem value="Lote">Lote</SelectItem>
+                      <SelectItem value="Otro">Otro</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="sm:col-span-4 flex items-center justify-between gap-3 pt-1">
                   <p className="text-[11px] text-slate-500">

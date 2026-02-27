@@ -26,6 +26,7 @@ function PublicarProyectoForm() {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
+  const [videoUrl, setVideoUrl] = useState("");
   const [ciudad, setCiudad] = useState<string>("Bucaramanga");
   const [estado, setEstado] = useState<string>("Preventa");
   const [categoria, setCategoria] = useState<string>("Residencial");
@@ -61,11 +62,14 @@ function PublicarProyectoForm() {
 
     try {
       const slug = slugBase || `proyecto-${Date.now()}`;
+
+      const numericPrecio = Number(String(precio).replace(/\D/g, "")) || null;
+
       const payload = {
         slug,
         titulo,
         descripcion,
-        precio: precio ? Number(precio) : null,
+        precio: numericPrecio,
         ciudad,
         estado,
         categoria,
@@ -73,6 +77,7 @@ function PublicarProyectoForm() {
         images: renders,
         planos_urls: planos,
         licencia_archivos: licenciaArchivos,
+        video_url: videoUrl.trim() || null,
         entorno: entorno.trim() || null,
         entorno_imagenes: entornoImages,
         entorno_videos: entornoVideos
@@ -138,7 +143,7 @@ function PublicarProyectoForm() {
         const { data, error } = await supabase
           .from("projects")
           .select(
-            "slug,titulo,descripcion,precio,ciudad,estado,categoria,fecha_entrega_estimada,images,planos_urls,licencia_url,licencia_archivos,entorno,entorno_imagenes,entorno_videos,entorno_archivos,lat,lng",
+            "slug,titulo,descripcion,precio,video_url,ciudad,estado,categoria,fecha_entrega_estimada,images,planos_urls,licencia_url,licencia_archivos,entorno,entorno_imagenes,entorno_videos,entorno_archivos,lat,lng",
           )
           .eq("id", editId)
           .maybeSingle();
@@ -150,7 +155,12 @@ function PublicarProyectoForm() {
         const row = data as any;
         setTitulo(row.titulo ?? "");
         setDescripcion(row.descripcion ?? "");
-        setPrecio(row.precio?.toString() ?? "");
+        setPrecio(
+          row.precio != null
+            ? String(row.precio).replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+            : "",
+        );
+        setVideoUrl(row.video_url ?? "");
         setCiudad(row.ciudad ?? "Bucaramanga");
         setEstado(row.estado ?? "Preventa");
         setCategoria(row.categoria ?? "Residencial");
@@ -251,12 +261,27 @@ function PublicarProyectoForm() {
                     Precio desde (COP)
                   </label>
                   <Input
-                    type="number"
                     value={precio}
-                    onChange={(e) => setPrecio(e.target.value)}
+                    onChange={(e) =>
+                      setPrecio(
+                        e.target.value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+                      )
+                    }
                     className="border-slate-300 bg-white text-sm"
                   />
                 </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-medium text-slate-600">
+                  Video de presentación (YouTube)
+                </label>
+                <Input
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  className="border-slate-300 bg-white text-sm"
+                />
               </div>
 
               <div className="grid gap-3 sm:grid-cols-2">

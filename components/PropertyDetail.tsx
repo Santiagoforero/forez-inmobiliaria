@@ -738,6 +738,9 @@ function CostosCompra({ valor }: { valor: number }) {
         <p className="mt-1 text-xs text-slate-300">
           Proyección y costos estimados para tomar la mejor decisión
         </p>
+        <p className="mt-1 text-[10px] text-slate-300/80">
+          Estas son proyecciones de referencia; el comportamiento real puede variar según mercado, tasas, regulaciones y otros factores.
+        </p>
       </div>
       <CardContent className="space-y-5 p-5">
         <div>

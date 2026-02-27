@@ -1,12 +1,53 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/lib/supabase";
+import { toast } from "sonner";
 
 export default function ContactPage() {
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [telefono, setTelefono] = useState("");
+  const [ciudadInteres, setCiudadInteres] = useState("");
+  const [mensaje, setMensaje] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!mensaje.trim()) {
+      toast.error("Por favor escribe un mensaje.");
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.from("contact_messages").insert({
+        nombre: nombre.trim() || null,
+        email: email.trim() || null,
+        telefono: telefono.trim() || null,
+        ciudad_interes: ciudadInteres.trim() || null,
+        mensaje: mensaje.trim(),
+      });
+      if (error) {
+        toast.error("No se pudo enviar tu solicitud. Intenta de nuevo.");
+      } else {
+        toast.success("Tu mensaje fue enviado. Un asesor te contactará pronto.");
+        setNombre("");
+        setEmail("");
+        setTelefono("");
+        setCiudadInteres("");
+        setMensaje("");
+      }
+    } catch {
+      toast.error("No se pudo enviar tu solicitud. Intenta de nuevo.");
+    } finally {
+      setLoading(false);
+    }
+  }
   return (
     <div className="bg-slate-50">
       <section className="border-b border-slate-200 bg-white">
@@ -31,9 +72,9 @@ export default function ContactPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <Card className="border-slate-200 bg-white shadow-sm">
+              <Card className="border-slate-200 bg-white shadow-sm">
               <CardContent className="space-y-5 p-6 sm:p-8">
-                <form className="space-y-4">
+                <form className="space-y-4" onSubmit={handleSubmit}>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div>
                       <label className="mb-1 block text-xs font-medium text-slate-600">
@@ -41,6 +82,8 @@ export default function ContactPage() {
                       </label>
                       <Input
                         placeholder="Tu nombre y apellidos"
+                        value={nombre}
+                        onChange={(e) => setNombre(e.target.value)}
                         className="border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400"
                       />
                     </div>
@@ -51,6 +94,8 @@ export default function ContactPage() {
                       <Input
                         type="email"
                         placeholder="tu@correo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
                         className="border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400"
                       />
                     </div>
@@ -62,6 +107,8 @@ export default function ContactPage() {
                       </label>
                       <Input
                         placeholder="+57 ..."
+                        value={telefono}
+                        onChange={(e) => setTelefono(e.target.value)}
                         className="border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400"
                       />
                     </div>
@@ -71,6 +118,8 @@ export default function ContactPage() {
                       </label>
                       <Input
                         placeholder="Bucaramanga, Bogotá, Medellín..."
+                        value={ciudadInteres}
+                        onChange={(e) => setCiudadInteres(e.target.value)}
                         className="border-slate-300 bg-white text-sm text-slate-900 placeholder:text-slate-400"
                       />
                     </div>
@@ -82,11 +131,17 @@ export default function ContactPage() {
                     <textarea
                       rows={4}
                       placeholder="Cuéntanos qué tipo de propiedad buscas, presupuesto aproximado y plazo."
+                      value={mensaje}
+                      onChange={(e) => setMensaje(e.target.value)}
                       className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"
                     />
                   </div>
-                  <Button className="w-full bg-[#0A2540] text-sm font-semibold text-white hover:bg-[#103463]">
-                    Enviar solicitud
+                  <Button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-[#0A2540] text-sm font-semibold text-white hover:bg-[#103463]"
+                  >
+                    {loading ? "Enviando..." : "Enviar solicitud"}
                   </Button>
                   <p className="text-[11px] text-slate-500">
                     Al enviar tus datos autorizas a Forez Inmobiliaria a
@@ -118,25 +173,25 @@ export default function ContactPage() {
                     <span className="font-medium text-slate-700">
                       Correo:
                     </span>{" "}
-                    contacto@forez.com
+                    forezinmobiliaria@gmail.com
                   </p>
                   <p>
                     <span className="font-medium text-slate-700">
                       Teléfono:
                     </span>{" "}
-                    +57 (300) 000 0000
+                    +57 301 827 2954
                   </p>
                 </div>
               </CardContent>
             </Card>
-            <Card className="border-dashed border-slate-300 bg-slate-50">
+            <Card className="border-slate-200 bg-white shadow-sm">
               <CardContent className="flex h-52 flex-col items-center justify-center gap-2 text-center">
                 <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">
-                  MAPA FOREZ
+                  Atención 100% remota
                 </span>
                 <p className="max-w-xs text-xs text-slate-500">
-                  Aquí podrás integrar próximamente un mapa interactivo (por
-                  ejemplo, Mapbox) con oficinas y zonas de cobertura Forez.
+                  Hoy atendemos de forma virtual por videollamada, correo y WhatsApp.
+                  Agenda una conversación y coordinamos el mejor canal contigo.
                 </p>
               </CardContent>
             </Card>

@@ -59,12 +59,15 @@ function PublicarPropiedadForm() {
 
     try {
       const slug = slugBase || `propiedad-${Date.now()}`;
+
+      const numericPrecio = Number(String(precio).replace(/\D/g, "")) || 0;
+
       const payload = {
         slug,
         titulo,
         descripcionCorta: descripcion.slice(0, 200),
         descripcionLarga: descripcion,
-        precio: Number(precio || 0),
+        precio: numericPrecio,
         ciudad,
         tipo,
         barrio: barrio.trim() || "",
@@ -147,7 +150,11 @@ function PublicarPropiedadForm() {
         const row = data as any;
         setTitulo(row.titulo ?? "");
         setDescripcion(row.descripcionLarga ?? row.descripcionCorta ?? "");
-        setPrecio(row.precio?.toString() ?? "");
+        setPrecio(
+          row.precio != null
+            ? String(row.precio).replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+            : "",
+        );
         setCiudad(row.ciudad ?? "Bucaramanga");
         setTipo(row.tipo ?? "Apartamento");
         setBarrio(row.barrio ?? "");
@@ -217,9 +224,12 @@ function PublicarPropiedadForm() {
                     Precio (COP)
                   </label>
                   <Input
-                    type="number"
                     value={precio}
-                    onChange={(e) => setPrecio(e.target.value)}
+                    onChange={(e) =>
+                      setPrecio(
+                        e.target.value.replace(/\D/g, "").replace(/\B(?=(\d{3})+(?!\d))/g, "."),
+                      )
+                    }
                     required
                     className="border-slate-300 bg-white text-sm"
                   />
