@@ -13,11 +13,11 @@ export default function AboutPage() {
             Sobre nosotros
           </p>
           <h1 className="mt-3 text-balance text-3xl font-semibold tracking-tight text-slate-900 sm:text-4xl">
-            Forez Inmobiliaria, aliados en inversiones
+            Forez Inmobiliaria, aliados en activos
           </h1>
           <p className="mt-3 max-w-2xl text-sm text-slate-600 sm:text-base">
-            Acompañamos a familias e inversionistas en la compra y venta de
-            propiedades de alto nivel en Bucaramanga, Bogotá,
+            Acompañamos a familias, empresas e inversionistas en la compra y venta de
+            vivienda, lotes, comercio, industria y proyectos sobre planos en Bucaramanga, Bogotá,
             Medellín y otras ciudades clave de Colombia.
           </p>
         </div>
@@ -37,10 +37,11 @@ export default function AboutPage() {
                   Nuestra filosofía
                 </h2>
                 <p className="text-sm text-slate-600">
-                  Seleccionamos un portafolio curado de inmuebles que cumplen
+                  Seleccionamos un portafolio curado de inmuebles, lotes, activos
+                  comerciales e industriales y proyectos sobre planos que cumplen
                   estándares estrictos de ubicación, diseño, seguridad y
-                  potencial de valorización. Cada propiedad se analiza con
-                  criterios financieros y de estilo de vida, para asegurar que
+                  potencial de valorización. Cada activo se analiza con
+                  criterios financieros y de estrategia patrimonial, para asegurar que
                   la decisión de inversión sea sólida y sostenible en el tiempo.
                 </p>
                 <p className="text-sm text-slate-600">

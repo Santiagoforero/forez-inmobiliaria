@@ -5,6 +5,7 @@ import { Navbar } from "@/components/navbar";
 import { Toaster } from "sonner";
 import WhatsAppFloatingButton from "@/components/WhatsAppFloatingButton";
 import { ensureSeedOnBoot } from "@/lib/supabase";
+import { DreamRequestBox } from "@/components/DreamRequestBox";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -32,6 +33,11 @@ export default async function RootLayout({
         <div className="flex min-h-screen flex-col bg-gradient-to-b from-slate-50 via-white to-slate-100">
           <Navbar />
           <main className="flex-1">{children}</main>
+          <section className="border-t border-slate-200 bg-slate-50">
+            <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+              <DreamRequestBox />
+            </div>
+          </section>
           <WhatsAppFloatingButton />
           <Toaster position="top-right" richColors />
           <footer className="border-t border-slate-200 bg-white/80 backdrop-blur">

@@ -6,7 +6,7 @@ export type Property = {
   descripcionLarga: string;
   precio: number;
   ciudad: string;
-  tipo: "Apartamento" | "Casa" | "Penthouse";
+  tipo: string;
   barrio?: string;
   metros: number;
   habitaciones: number;
@@ -15,6 +15,14 @@ export type Property = {
   imagenesStaging: string[];
   imagenes360: string[];
   videoUrl?: string;
+  categoria?: string;
+  tags?: string[];
+  entorno?: string;
+  entornoImagenes?: string[];
+  entornoVideos?: string[];
+  entornoArchivos?: string[];
+  planosUrls?: string[];
+  licenciaArchivos?: string[];
   coords: { lat: number; lng: number };
   remoteId?: string;
 };

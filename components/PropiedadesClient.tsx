@@ -28,6 +28,7 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
   const [ciudad, setCiudad] = useState<string>("todas");
   const [tiposSeleccionados, setTiposSeleccionados] = useState<string[]>([]);
   const [habSeleccionadas, setHabSeleccionadas] = useState<number[]>([]);
+  const [segmento, setSegmento] = useState<"todas" | "residencial" | "lote" | "comercial">("todas");
 
   const precios = initialProperties.map((p) => p.precio);
   const minPrecio = precios.length > 0 ? Math.min(...precios) : 0;
@@ -47,8 +48,19 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
     new Set(initialProperties.map((p) => p.habitaciones)),
   ).sort((a, b) => a - b);
 
+  function inferCategoria(tipo: string | undefined): "residencial" | "lote" | "comercial" {
+    if (!tipo) return "residencial";
+    const t = tipo.toLowerCase();
+    if (["lote", "lote urbano", "lote rural"].some((k) => t.includes(k))) return "lote";
+    if (["local", "bodega", "oficina", "industrial", "comercial"].some((k) => t.includes(k))) {
+      return "comercial";
+    }
+    return "residencial";
+  }
+
   const propiedadesFiltradas = useMemo(() => {
     return initialProperties.filter((p: Property) => {
+      const cat = p.categoria ?? inferCategoria(p.tipo);
       const q = busquedaInteligente
         .toLowerCase()
         .normalize("NFD")
@@ -71,6 +83,7 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
         if (!tokens.every((t) => hay.includes(t))) return false;
       }
       if (ciudad !== "todas" && p.ciudad !== ciudad) return false;
+      if (segmento !== "todas" && cat !== segmento) return false;
       if (p.precio > precioMax) return false;
       if (p.metros < metrosMin) return false;
       if (tiposSeleccionados.length && !tiposSeleccionados.includes(p.tipo)) {
@@ -92,6 +105,7 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
     metrosMin,
     tiposSeleccionados,
     habSeleccionadas,
+    segmento,
   ]);
 
   return (
@@ -139,6 +153,33 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
               </p>
 
               <div className="mt-4 space-y-4 text-xs text-slate-600">
+                <div className="space-y-1.5">
+                  <p className="font-medium">Tipo de activo</p>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { id: "todas", label: "Todos" },
+                      { id: "residencial", label: "Residencial" },
+                      { id: "lote", label: "Lotes" },
+                      { id: "comercial", label: "Comercial / Industrial" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() =>
+                          setSegmento(opt.id as typeof segmento)
+                        }
+                        className={`rounded-full border px-3 py-1.5 text-[11px] ${
+                          segmento === opt.id
+                            ? "border-[#0A2540] bg-[#0A2540] text-white"
+                            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 <div>
                   <label className="mb-1 block font-medium">Búsqueda inteligente</label>
                   <Input
@@ -281,10 +322,10 @@ export default function PropiedadesClient({ initialProperties }: PropiedadesClie
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.45 }}
-                  className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 justify-items-center"
+                  className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
                 >
                   {propiedadesFiltradas.map((propiedad) => (
-                    <div key={propiedad.slug} className="w-full max-w-sm">
+                    <div key={propiedad.slug} className="w-full">
                       <PropertyCard property={propiedad} showNeighborhood />
                     </div>
                   ))}

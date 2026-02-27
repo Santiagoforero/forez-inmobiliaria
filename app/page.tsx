@@ -5,3 +5,4 @@ export default async function Home() {
   const properties = await getPropertiesFromSupabase();
   return <HomeClient initialProperties={properties} />;
 }
+

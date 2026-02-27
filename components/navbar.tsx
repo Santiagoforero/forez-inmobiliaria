@@ -19,6 +19,7 @@ import { supabase } from "@/lib/supabase";
 const navLinks = [
   { href: "/", label: "Inicio" },
   { href: "/propiedades", label: "Propiedades" },
+  { href: "/proyectos", label: "Proyectos" },
   { href: "/sobre-nosotros", label: "Sobre Nosotros" },
   { href: "/contacto", label: "Contacto" },
 ];
@@ -30,6 +31,7 @@ type UserSummary = {
 export function Navbar() {
   const pathname = usePathname();
   const [user, setUser] = useState<UserSummary | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -74,8 +76,8 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:h-20 sm:px-6 lg:px-8">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="relative h-9 w-9">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3">
+          <div className="relative h-9 w-9 shrink-0">
             <Image
               src="/logo.png"
               alt="Forez Inmobiliaria"
@@ -85,14 +87,12 @@ export function Navbar() {
               priority
             />
           </div>
-          <div className="hidden flex-col leading-tight sm:flex">
-            <span className="text-sm font-semibold tracking-[0.25em] text-slate-900">
-              FOREZ
-            </span>
-            <span className="text-xs font-medium uppercase tracking-[0.22em] text-slate-500">
+          <span className="text-sm font-semibold tracking-[0.2em] text-slate-900 sm:flex sm:flex-col sm:leading-tight">
+            <span className="tracking-[0.25em]">FOREZ</span>
+            <span className="hidden text-xs font-medium uppercase tracking-[0.22em] text-slate-500 sm:inline">
               Inmobiliaria
             </span>
-          </div>
+          </span>
         </Link>
 
         <nav className="hidden items-center gap-8 text-sm font-medium text-slate-600 md:flex">
@@ -142,6 +142,15 @@ export function Navbar() {
                   <Link href="/publicar">Publicar propiedad</Link>
                 </Button>
               )}
+              {isAdmin && (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="hidden border-sky-400 text-xs font-semibold text-sky-800 hover:bg-sky-50 sm:inline-flex"
+                >
+                  <Link href="/proyectos/publicar">Publicar proyecto</Link>
+                </Button>
+              )}
             </>
           ) : (
             <>
@@ -161,7 +170,7 @@ export function Navbar() {
             </>
           )}
 
-          <Sheet>
+          <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
             <SheetTrigger asChild>
               <Button
                 size="icon"
@@ -175,7 +184,7 @@ export function Navbar() {
             <SheetContent side="right" className="border-l-slate-200 bg-white">
               <SheetHeader>
                 <SheetTitle className="text-left text-xs font-semibold tracking-[0.25em] text-slate-500">
-                  FOREZ INMOBILIARIA
+                  INMOBILIARIA PREMIUM
                 </SheetTitle>
               </SheetHeader>
               <nav className="mt-6 flex flex-col gap-4 text-sm font-medium text-slate-700">
@@ -185,6 +194,7 @@ export function Navbar() {
                     <Link
                       key={link.href}
                       href={link.href}
+                      onClick={() => setSheetOpen(false)}
                       className={`rounded-md px-2 py-1.5 transition-colors ${
                         active
                           ? "bg-[#0A2540] text-white"
@@ -207,6 +217,7 @@ export function Navbar() {
                           "https://wa.me/573018272954?text=Hola,%20quiero%20publicar%20una%20propiedad%20con%20Forez",
                           "_blank",
                         );
+                        setSheetOpen(false);
                       }}
                     >
                       ¿Quieres publicar con nosotros?
@@ -216,7 +227,23 @@ export function Navbar() {
                         asChild
                         className="bg-emerald-600 text-xs font-semibold text-white hover:bg-emerald-700"
                       >
-                        <Link href="/publicar">Publicar propiedad</Link>
+                        <Link href="/publicar" onClick={() => setSheetOpen(false)}>
+                          Publicar propiedad
+                        </Link>
+                      </Button>
+                    )}
+                    {isAdmin && (
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="text-xs font-semibold text-sky-800 hover:bg-sky-50"
+                      >
+                        <Link
+                          href="/proyectos/publicar"
+                          onClick={() => setSheetOpen(false)}
+                        >
+                          Publicar proyecto
+                        </Link>
                       </Button>
                     )}
                   </>
@@ -227,13 +254,17 @@ export function Navbar() {
                       variant="outline"
                       className="border-slate-300 bg-white text-sm font-medium text-slate-800 hover:border-slate-400 hover:bg-slate-50"
                     >
-                      <Link href="/auth">Ingresar</Link>
+                      <Link href="/auth" onClick={() => setSheetOpen(false)}>
+                        Ingresar
+                      </Link>
                     </Button>
                     <Button
                       asChild
                       className="bg-[#0A2540] text-sm font-semibold text-white shadow-lg shadow-[#0A2540]/40 hover:bg-[#103463]"
                     >
-                      <Link href="/auth">Crear cuenta</Link>
+                      <Link href="/auth" onClick={() => setSheetOpen(false)}>
+                        Crear cuenta
+                      </Link>
                     </Button>
                   </>
                 )}

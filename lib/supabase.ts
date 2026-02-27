@@ -23,6 +23,15 @@ export type SupabasePropertyRow = {
   banos: number;
   images: string[];
   video_url?: string | null;
+  tour360_url?: string | null;
+  categoria?: string | null;
+  tags?: string[] | null;
+  entorno?: string | null;
+  entorno_imagenes?: string[] | null;
+  entorno_videos?: string[] | null;
+  entorno_archivos?: string[] | null;
+  planos_urls?: string[] | null;
+  licencia_archivos?: string[] | null;
   lat: number;
   lng: number;
   created_at?: string;
@@ -38,15 +47,23 @@ export function mapSupabaseRowToProperty(row: SupabasePropertyRow, index = 0): P
     descripcionLarga: row.descripcionLarga,
     precio: row.precio,
     ciudad: row.ciudad,
-    tipo: row.tipo as "Apartamento" | "Casa" | "Penthouse",
+    tipo: row.tipo,
     barrio: row.barrio ?? undefined,
     metros: row.metros,
     habitaciones: row.habitaciones,
     banos: row.banos,
     imagenes: images,
     imagenesStaging: [],
-    imagenes360: [],
+    imagenes360: row.tour360_url ? [row.tour360_url] : [],
     videoUrl: row.video_url ?? undefined,
+    categoria: row.categoria ?? undefined,
+    tags: row.tags ?? undefined,
+    entorno: row.entorno ?? undefined,
+    entornoImagenes: row.entorno_imagenes ?? undefined,
+    entornoVideos: row.entorno_videos ?? undefined,
+    entornoArchivos: row.entorno_archivos ?? undefined,
+    planosUrls: row.planos_urls ?? undefined,
+    licenciaArchivos: row.licencia_archivos ?? undefined,
     coords: { lat: Number(row.lat), lng: Number(row.lng) },
     remoteId: row.id,
   };
@@ -54,17 +71,38 @@ export function mapSupabaseRowToProperty(row: SupabasePropertyRow, index = 0): P
 
 export async function getPropertiesFromSupabase(): Promise<Property[]> {
   try {
+    const fullSelect =
+      "id,slug,titulo,descripcionCorta,descripcionLarga,precio,ciudad,tipo,barrio,metros,habitaciones,banos,images,video_url,tour360_url,categoria,tags,entorno,entorno_imagenes,entorno_videos,entorno_archivos,planos_urls,licencia_archivos,lat,lng";
+    const minimalSelect =
+      "id,slug,titulo,descripcionCorta,descripcionLarga,precio,ciudad,tipo,barrio,metros,habitaciones,banos,images,video_url,lat,lng";
+
     const { data, error } = await supabase
       .from("properties")
-      .select("id,slug,titulo,descripcionCorta,descripcionLarga,precio,ciudad,tipo,barrio,metros,habitaciones,banos,images,video_url,lat,lng")
+      .select(fullSelect)
       .order("created_at", { ascending: false });
 
-    if (error) {
-      // eslint-disable-next-line no-console
-      console.warn("[Supabase] Error fetching properties:", error.message);
-      return [];
+    if (!error) {
+      return (data ?? []).map((row, i) =>
+        mapSupabaseRowToProperty(row as SupabasePropertyRow, i),
+      );
     }
-    return (data ?? []).map((row, i) => mapSupabaseRowToProperty(row as SupabasePropertyRow, i));
+
+    const msg = (error as any)?.message as string | undefined;
+    if (msg && msg.toLowerCase().includes("column") && msg.toLowerCase().includes("does not exist")) {
+      const retry = await supabase
+        .from("properties")
+        .select(minimalSelect)
+        .order("created_at", { ascending: false });
+      if (!retry.error) {
+        return (retry.data ?? []).map((row, i) =>
+          mapSupabaseRowToProperty(row as SupabasePropertyRow, i),
+        );
+      }
+    }
+
+    // eslint-disable-next-line no-console
+    console.warn("[Supabase] Error fetching properties:", error.message);
+    return [];
   } catch (e) {
     // eslint-disable-next-line no-console
     console.warn("[Supabase] Exception fetching properties:", e);
@@ -74,14 +112,34 @@ export async function getPropertiesFromSupabase(): Promise<Property[]> {
 
 export async function getPropertyByIdFromSupabase(id: string): Promise<Property | null> {
   try {
+    const fullSelect =
+      "id,slug,titulo,descripcionCorta,descripcionLarga,precio,ciudad,tipo,barrio,metros,habitaciones,banos,images,video_url,tour360_url,categoria,tags,entorno,entorno_imagenes,entorno_videos,entorno_archivos,planos_urls,licencia_archivos,lat,lng";
+    const minimalSelect =
+      "id,slug,titulo,descripcionCorta,descripcionLarga,precio,ciudad,tipo,barrio,metros,habitaciones,banos,images,video_url,lat,lng";
+
     const { data, error } = await supabase
       .from("properties")
-      .select("id,slug,titulo,descripcionCorta,descripcionLarga,precio,ciudad,tipo,barrio,metros,habitaciones,banos,images,video_url,lat,lng")
+      .select(fullSelect)
       .eq("id", id)
       .maybeSingle();
 
-    if (error || !data) return null;
-    return mapSupabaseRowToProperty(data as SupabasePropertyRow, 0);
+    if (!error && data) {
+      return mapSupabaseRowToProperty(data as SupabasePropertyRow, 0);
+    }
+
+    const msg = (error as any)?.message as string | undefined;
+    if (msg && msg.toLowerCase().includes("column") && msg.toLowerCase().includes("does not exist")) {
+      const retry = await supabase
+        .from("properties")
+        .select(minimalSelect)
+        .eq("id", id)
+        .maybeSingle();
+      if (!retry.error && retry.data) {
+        return mapSupabaseRowToProperty(retry.data as SupabasePropertyRow, 0);
+      }
+    }
+
+    return null;
   } catch {
     return null;
   }

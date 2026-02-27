@@ -14,7 +14,9 @@ import {
 } from "lucide-react";
 
 import type { Property } from "@/lib/properties";
-import PropertyMap from "@/components/PropertyMap";
+import { EntornoPanel } from "@/components/EntornoPanel";
+import type { MediaItem, MediaViewerType } from "@/components/MediaViewerModal";
+import { MediaViewerModal } from "@/components/MediaViewerModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -60,6 +62,7 @@ export default function PropertyDetail({
   similares: Property[];
   usdRate?: number;
 }) {
+  const [leadDialogOpen, setLeadDialogOpen] = useState(false);
   const [staged, setStaged] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -71,6 +74,15 @@ export default function PropertyDetail({
   const [leadMessage, setLeadMessage] = useState(
     `Estoy interesado en la propiedad "${property.titulo}" en ${property.ciudad}.`,
   );
+  const [mediaViewerOpen, setMediaViewerOpen] = useState(false);
+  const [mediaViewerItems, setMediaViewerItems] = useState<MediaItem[]>([]);
+  const [mediaViewerIndex, setMediaViewerIndex] = useState(0);
+
+  const openMediaViewer = (items: MediaItem[], index: number) => {
+    setMediaViewerItems(items);
+    setMediaViewerIndex(index);
+    setMediaViewerOpen(true);
+  };
 
   const images = staged ? property.imagenesStaging : property.imagenes;
   const thumbs = images.slice(0, Math.max(6, Math.min(images.length, 12)));
@@ -92,6 +104,28 @@ export default function PropertyDetail({
   const usdApprox =
     usdRate && usdRate > 0 ? Math.round(property.precio * usdRate) : null;
 
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    supabase.auth
+      .getUser()
+      .then(({ data }) => {
+        if (!mounted) return;
+        if (data.user?.email === "forezinmobiliaria@gmail.com") {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+      })
+      .catch(() => {
+        if (mounted) setIsAdmin(false);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   async function handleLeadSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLeadLoading(true);
@@ -108,6 +142,13 @@ export default function PropertyDetail({
         toast.error("No se pudo enviar tu solicitud. Intenta de nuevo.");
       } else {
         toast.success("Tu mensaje fue enviado. Un asesor te contactará pronto.");
+        setLeadDialogOpen(false);
+        setLeadName("");
+        setLeadEmail("");
+        setLeadPhone("");
+        setLeadMessage(
+          `Estoy interesado en la propiedad "${property.titulo}" en ${property.ciudad}.`,
+        );
       }
     } catch {
       toast.error("No se pudo enviar tu solicitud. Intenta de nuevo.");
@@ -162,6 +203,19 @@ export default function PropertyDetail({
                   USD (tasa diaria)
                 </p>
               )}
+              {isAdmin && property.remoteId && (
+                <div>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="mt-2 border-sky-500 text-[11px] font-semibold text-sky-800 hover:bg-sky-50"
+                  >
+                    <Link href={`/publicar?edit=${property.remoteId}`}>
+                      Editar esta propiedad
+                    </Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -177,7 +231,19 @@ export default function PropertyDetail({
               className="space-y-4"
             >
               <Card className="overflow-hidden rounded-2xl border-slate-200 bg-white shadow-sm">
-                <div className="relative aspect-[16/9] overflow-hidden">
+                <div
+                  className="relative aspect-video overflow-hidden cursor-pointer"
+                  onClick={() =>
+                    openMediaViewer(
+                      images.map((img, i) => ({ type: "image" as const, url: img, title: `${property.titulo} — Imagen ${i + 1}` })),
+                      activeIdx,
+                    )
+                  }
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && openMediaViewer("image", activeImage, property.titulo)}
+                  aria-label="Ver imagen en grande"
+                >
                   <Image
                     src={activeImage}
                     alt={property.titulo}
@@ -186,8 +252,8 @@ export default function PropertyDetail({
                     className="object-cover"
                     priority
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/45 via-transparent to-transparent" />
-                  <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2">
+                  <div className="absolute inset-0 bg-linear-to-t from-slate-950/45 via-transparent to-transparent" />
+                  <div className="absolute left-4 top-4 flex flex-wrap items-center gap-2" onClick={(e) => e.stopPropagation()}>
                     <Button
                       size="sm"
                       variant="secondary"
@@ -217,7 +283,13 @@ export default function PropertyDetail({
                         className={`relative h-20 w-32 flex-none overflow-hidden rounded-xl border ${
                           idx === activeIdx ? "border-sky-400" : "border-slate-200"
                         }`}
-                        onClick={() => setActiveIdx(idx)}
+                        onClick={() => {
+                          setActiveIdx(idx);
+                          openMediaViewer(
+                            thumbs.map((im, i) => ({ type: "image" as const, url: im, title: `${property.titulo} — Imagen ${i + 1}` })),
+                            idx,
+                          );
+                        }}
                         aria-label={`Imagen ${idx + 1}`}
                       >
                         <Image
@@ -255,17 +327,15 @@ export default function PropertyDetail({
                     <p className="text-xs font-medium uppercase tracking-[0.2em] text-slate-500">
                       Acciones
                     </p>
-                    {property.imagenes360?.length > 0 && property.imagenes360[0] && (
-                      <Button
-                        className="w-full bg-[#0A2540] text-sm font-semibold text-white hover:bg-[#103463]"
-                        onClick={() => setTourOpen(true)}
-                      >
-                        <Play className="mr-2 h-4 w-4" />
-                        Tour Virtual 360°
-                      </Button>
-                    )}
+                    <Button
+                      className="w-full bg-[#0A2540] text-sm font-semibold text-white hover:bg-[#103463]"
+                      onClick={() => setTourOpen(true)}
+                    >
+                      <Play className="mr-2 h-4 w-4" />
+                      Tour Virtual 360°
+                    </Button>
 
-                    <Dialog>
+                    <Dialog open={leadDialogOpen} onOpenChange={setLeadDialogOpen}>
                       <DialogTrigger asChild>
                         <Button
                           variant="outline"
@@ -355,21 +425,31 @@ export default function PropertyDetail({
               {property.videoUrl && (() => {
                 const videoId = getYouTubeVideoId(property.videoUrl);
                 if (!videoId) return null;
+                const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=0&mute=0`;
                 return (
                   <Card className="overflow-hidden border-slate-200 bg-black">
                     <CardContent className="p-0">
                       <p className="px-5 pt-5 text-xs font-medium uppercase tracking-[0.2em] text-slate-400">
                         Video de la propiedad
                       </p>
-                      <div className="relative aspect-video w-full">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          openMediaViewer(
+                            [{ type: "video" as const, url: embedUrl, title: "Video de la propiedad" }],
+                            0,
+                          )
+                        }
+                        className="relative block aspect-video w-full text-left transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                      >
                         <iframe
                           src={`https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1`}
                           title="Video de la propiedad"
                           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                           allowFullScreen
-                          className="absolute inset-0 h-full w-full"
+                          className="pointer-events-none absolute inset-0 h-full w-full"
                         />
-                      </div>
+                      </button>
                     </CardContent>
                   </Card>
                 );
@@ -406,16 +486,53 @@ export default function PropertyDetail({
         </div>
       </section>
 
+      <EntornoPanel
+        title="Análisis del entorno y documentación"
+        contextText={property.entorno}
+        images={property.entornoImagenes ?? []}
+        videos={property.entornoVideos ?? []}
+        documents={property.entornoArchivos ?? []}
+        planos={property.planosUrls ?? []}
+        licenciaUrls={property.licenciaArchivos ?? []}
+        lat={property.coords?.lat}
+        lng={property.coords?.lng}
+      />
+
       <section className="bg-slate-50">
         <div className="mx-auto max-w-6xl px-4 pb-10 sm:px-6 lg:px-8 lg:pb-14">
           <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
-            Mapa 3D
+            Ubicación
           </h2>
           <p className="mt-2 text-sm text-slate-600">
             Ubicación aproximada y contexto de la zona.
           </p>
-          <div className="mt-6">
-            <PropertyMap properties={[property]} heightClassName="h-[280px] sm:h-[360px] lg:h-[460px]" />
+          <div className="mt-6 space-y-2">
+            <div className="relative aspect-video overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
+              <iframe
+                src={`https://www.google.com/maps?q=${property.coords.lat},${property.coords.lng}&output=embed`}
+                title="Mapa de ubicación"
+                loading="lazy"
+                className="absolute inset-0 h-full w-full"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={() =>
+                openMediaViewer(
+                  [
+                    {
+                      type: "embed",
+                      url: `https://www.google.com/maps?q=${property.coords.lat},${property.coords.lng}&output=embed`,
+                      title: "Mapa de ubicación",
+                    },
+                  ],
+                  0,
+                )
+              }
+              className="text-sm font-semibold text-sky-700 hover:underline"
+            >
+              Ver mapa en grande
+            </button>
           </div>
         </div>
       </section>
@@ -432,7 +549,16 @@ export default function PropertyDetail({
                   key={p.id}
                   className="group flex h-full flex-col overflow-hidden rounded-lg border-slate-200 bg-white shadow-md transition hover:shadow-xl"
                 >
-                  <div className="relative aspect-[16/9] overflow-hidden">
+                  <button
+                    type="button"
+                    className="relative aspect-video overflow-hidden text-left transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                    onClick={() =>
+                      openMediaViewer(
+                        [{ type: "image" as const, url: p.imagenes[0], title: p.titulo }],
+                        0,
+                      )
+                    }
+                  >
                     <Image
                       src={p.imagenes[0]}
                       alt={p.titulo}
@@ -440,7 +566,7 @@ export default function PropertyDetail({
                       sizes="(min-width: 1280px) 320px, 100vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
-                  </div>
+                  </button>
                   <CardContent className="space-y-2 p-4">
                     <p className="line-clamp-2 text-sm font-semibold text-slate-900">
                       {p.titulo}
@@ -481,10 +607,14 @@ export default function PropertyDetail({
             {images.slice(0, 12).map((img, idx) => (
               <button
                 key={img + idx}
-                className="relative aspect-[16/9] overflow-hidden rounded-xl border border-slate-200"
+                className="relative aspect-video overflow-hidden rounded-xl border border-slate-200 transition hover:ring-2 hover:ring-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
                 onClick={() => {
                   setActiveIdx(idx);
                   setGalleryOpen(false);
+                  openMediaViewer(
+                    images.map((im, i) => ({ type: "image" as const, url: im, title: `${property.titulo} — Imagen ${i + 1}` })),
+                    idx,
+                  );
                 }}
               >
                 <Image
@@ -499,6 +629,13 @@ export default function PropertyDetail({
           </div>
         </DialogContent>
       </Dialog>
+
+      <MediaViewerModal
+        open={mediaViewerOpen}
+        onOpenChange={setMediaViewerOpen}
+        items={mediaViewerItems}
+        initialIndex={mediaViewerIndex}
+      />
     </div>
   );
 }
@@ -516,7 +653,7 @@ function Tour360Dialog({
   const viewerRef = useRef<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const src = imageUrl || "https://pannellum.org/images/alma.jpg";
+  const src = imageUrl || "";
 
   useEffect(() => {
     if (!open) return;
@@ -524,6 +661,13 @@ function Tour360Dialog({
 
     let cancelled = false;
     setError(null);
+
+    if (!imageUrl) {
+      setError(
+        "Próximamente subiremos el tour 360° de esta propiedad. Solicítalo a uno de nuestros asesores si lo necesitas.",
+      );
+      return;
+    }
 
     (async () => {
       try {
@@ -587,7 +731,7 @@ function CostosCompra({ valor }: { valor: number }) {
 
   return (
     <Card className="overflow-hidden border-slate-200 bg-white shadow-sm">
-      <div className="bg-gradient-to-br from-[#0A2540] to-[#103463] px-5 py-4">
+      <div className="bg-linear-to-br from-[#0A2540] to-[#103463] px-5 py-4">
         <h3 className="text-sm font-semibold tracking-tight text-white">
           Tu inversión en números
         </h3>
