@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Menu } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -30,6 +30,7 @@ type UserSummary = {
 
 export function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const [user, setUser] = useState<UserSummary | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
@@ -132,6 +133,16 @@ export function Navbar() {
                   }}
                 >
                   ¿Quieres publicar con nosotros?
+                </button>
+                <button
+                  type="button"
+                  className="mt-0.5 text-[11px] font-semibold text-slate-500 hover:text-slate-700"
+                  onClick={async () => {
+                    await supabase.auth.signOut();
+                    router.push("/");
+                  }}
+                >
+                  Cerrar sesión
                 </button>
               </div>
               {isAdmin && (
@@ -246,6 +257,18 @@ export function Navbar() {
                         </Link>
                       </Button>
                     )}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="text-xs font-semibold text-slate-700 hover:bg-slate-50"
+                      onClick={async () => {
+                        await supabase.auth.signOut();
+                        setSheetOpen(false);
+                        router.push("/");
+                      }}
+                    >
+                      Cerrar sesión
+                    </Button>
                   </>
                 ) : (
                   <>
