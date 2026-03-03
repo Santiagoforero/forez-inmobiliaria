@@ -1,5 +1,8 @@
+import type { Metadata } from "next";
 import { supabase } from "@/lib/supabase";
 import { ProyectoDetailClient } from "@/components/ProyectoDetailClient";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://forez.co";
 
 type ProjectRow = {
   id: string;
@@ -22,6 +25,10 @@ type ProjectRow = {
   entorno_archivos: string[] | null;
   lat: number | null;
   lng: number | null;
+};
+
+type ParamsProps = {
+  params: Promise<{ id: string }>;
 };
 
 async function fetchProjectById(id: string): Promise<ProjectRow | null> {
@@ -54,11 +61,56 @@ async function fetchProjectById(id: string): Promise<ProjectRow | null> {
   return null;
 }
 
-export default async function ProyectoPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export async function generateMetadata({ params }: ParamsProps): Promise<Metadata> {
+  const { id } = await params;
+  const project = await fetchProjectById(id);
+
+  if (!project) {
+    return {
+      title: "Proyecto no encontrado | Forez Inmobiliaria",
+      description: "El proyecto que buscas no existe o fue eliminado.",
+    };
+  }
+
+  const title = `${project.titulo} | Forez Inmobiliaria`;
+  const rawDesc =
+    project.descripcion ||
+    "Proyecto inmobiliario en Colombia gestionado por Forez Inmobiliaria.";
+  const description =
+    rawDesc.length > 160 ? `${rawDesc.slice(0, 157)}...` : rawDesc;
+
+  const mainImage = project.images?.[0];
+  const imageUrl = mainImage?.startsWith("http")
+    ? mainImage
+    : `${BASE_URL}${mainImage || "/logo.png"}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/proyectos/${id}`,
+      type: "article",
+      locale: "es_CO",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
+
+export default async function ProyectoPage({ params }: ParamsProps) {
   const { id } = await params;
 
   const project = await fetchProjectById(id);

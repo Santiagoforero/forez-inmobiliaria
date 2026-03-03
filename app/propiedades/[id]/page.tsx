@@ -1,6 +1,61 @@
+import type { Metadata } from "next";
 import { getPropertyByIdFromSupabase, getPropertiesFromSupabase } from "@/lib/supabase";
 import type { Property } from "@/lib/properties";
 import PropertyDetail from "@/components/PropertyDetail";
+
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://forez.co";
+
+type ParamsProps = {
+  params: Promise<{ id: string }>;
+};
+
+export async function generateMetadata({ params }: ParamsProps): Promise<Metadata> {
+  const { id } = await params;
+  const property = await getPropertyByIdFromSupabase(id);
+
+  if (!property) {
+    return {
+      title: "Propiedad no encontrada | Forez Inmobiliaria",
+      description: "La propiedad que buscas no existe o fue eliminada.",
+    };
+  }
+
+  const title = `${property.titulo} | Forez Inmobiliaria`;
+  const rawDesc =
+    property.descripcionCorta || property.descripcionLarga || "Propiedad en Colombia gestionada por Forez Inmobiliaria.";
+  const description =
+    rawDesc.length > 160 ? `${rawDesc.slice(0, 157)}...` : rawDesc;
+
+  const mainImage = property.imagenes?.[0];
+  const imageUrl = mainImage?.startsWith("http")
+    ? mainImage
+    : `${BASE_URL}${mainImage || "/logo.png"}`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      url: `${BASE_URL}/propiedades/${id}`,
+      type: "article",
+      locale: "es_CO",
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+    },
+  };
+}
 
 async function getUsdRate() {
   try {
@@ -16,11 +71,7 @@ async function getUsdRate() {
   }
 }
 
-export default async function PropertyPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function PropertyPage({ params }: ParamsProps) {
   const { id } = await params;
   const property = await getPropertyByIdFromSupabase(id);
 
