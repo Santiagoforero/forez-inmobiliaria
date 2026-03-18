@@ -16,6 +16,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ReorderableImagePreviews } from "@/components/FileUploadPreviews";
 
 const ciudades = ["Bucaramanga", "Bogotá", "Medellín", "Cali", "Cartagena"];
 
@@ -366,13 +367,24 @@ function PublicarProyectoForm() {
                   {renders.length > 0 && <span className="text-xs text-slate-600">{renders.length} render(es) cargado(s)</span>}
                 </div>
                 {renders.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {renders.map((url, i) => (
-                      <div key={`${url}-${i}`} className="relative h-16 w-24 overflow-hidden rounded-lg border border-slate-200">
-                        <img src={url} alt="" className="h-full w-full object-cover" />
-                        <button type="button" onClick={() => setRenders((p) => p.filter((_, j) => j !== i))} className="absolute right-1 top-1 rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white">×</button>
-                      </div>
-                    ))}
+                  <div className="mt-2">
+                    <ReorderableImagePreviews
+                      urls={renders}
+                      onRemove={(index) =>
+                        setRenders((p) => p.filter((_, j) => j !== index))
+                      }
+                      onMove={(from, to) =>
+                        setRenders((prev) => {
+                          const next = [...prev];
+                          const [item] = next.splice(from, 1);
+                          next.splice(to, 0, item);
+                          return next;
+                        })
+                      }
+                    />
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      Arrastra los renders para reordenarlos. El primero queda como principal.
+                    </p>
                   </div>
                 )}
                 {imageUploading && <p className="text-[11px] text-slate-500">Subiendo...</p>}

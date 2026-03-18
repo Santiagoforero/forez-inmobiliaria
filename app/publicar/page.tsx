@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { ReorderableImagePreviews } from "@/components/FileUploadPreviews";
 
 const ciudades = ["Bucaramanga", "Bogotá", "Medellín", "Cali", "Cartagena"];
 
@@ -367,19 +368,24 @@ function PublicarPropiedadForm() {
                   }}
                 />
                 {imageUrls.length > 0 && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    {imageUrls.map((url, i) => (
-                      <div key={url} className="relative h-16 w-24 overflow-hidden rounded border border-slate-200">
-                        <img src={url} alt="" className="h-full w-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => setImageUrls((p) => p.filter((_, j) => j !== i))}
-                          className="absolute right-1 top-1 rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
+                  <div className="mt-2">
+                    <ReorderableImagePreviews
+                      urls={imageUrls}
+                      onRemove={(index) =>
+                        setImageUrls((p) => p.filter((_, j) => j !== index))
+                      }
+                      onMove={(from, to) =>
+                        setImageUrls((prev) => {
+                          const next = [...prev];
+                          const [item] = next.splice(from, 1);
+                          next.splice(to, 0, item);
+                          return next;
+                        })
+                      }
+                    />
+                    <p className="mt-2 text-[11px] text-slate-500">
+                      Arrastra las imágenes para reordenarlas. La primera queda como principal.
+                    </p>
                   </div>
                 )}
                 {imageUploading && <p className="text-[11px] text-slate-500">Subiendo...</p>}

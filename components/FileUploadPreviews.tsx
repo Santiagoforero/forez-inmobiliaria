@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 export function ImagePreviews({
   urls,
   onRemove,
@@ -144,6 +146,70 @@ export function DocPreviews({
         </div>
       )}
       {uploading && <p className="text-[11px] text-slate-500">Subiendo...</p>}
+    </div>
+  );
+}
+
+export function ReorderableImagePreviews({
+  urls,
+  onRemove,
+  onMove,
+}: {
+  urls: string[];
+  onRemove: (index: number) => void;
+  onMove: (fromIndex: number, toIndex: number) => void;
+}) {
+  const [dragIndex, setDragIndex] = useState<number | null>(null);
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {urls.map((url, i) => (
+        <div
+          key={`${url}-${i}`}
+          draggable
+          onDragStart={() => setDragIndex(i)}
+          onDragEnd={() => setDragIndex(null)}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={() => {
+            if (dragIndex == null || dragIndex === i) return;
+            onMove(dragIndex, i);
+            setDragIndex(null);
+          }}
+          className={`relative h-20 w-28 overflow-hidden rounded-lg border bg-slate-100 ${
+            dragIndex === i ? "border-sky-400 ring-2 ring-sky-200" : "border-slate-200"
+          }`}
+          title="Arrastra para reordenar"
+        >
+          <img src={url} alt="" className="h-full w-full object-cover" />
+
+          {i === 0 && (
+            <span className="absolute left-1 top-1 rounded bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold text-white">
+              Principal
+            </span>
+          )}
+
+          <div className="absolute bottom-1 left-1 right-1 flex items-center justify-between gap-1">
+            <button
+              type="button"
+              onClick={() => onMove(i, 0)}
+              className="rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-slate-800 hover:bg-white"
+              aria-label="Hacer principal"
+              title="Hacer principal"
+            >
+              Principal
+            </button>
+            <button
+              type="button"
+              onClick={() => onRemove(i)}
+              className="rounded bg-red-500 px-1.5 py-0.5 text-[10px] font-bold text-white hover:bg-red-600"
+              aria-label="Eliminar"
+              title="Eliminar"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }
