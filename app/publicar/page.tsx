@@ -12,7 +12,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { ReorderableImagePreviews } from "@/components/FileUploadPreviews";
 
-const ciudades = ["Bucaramanga", "Bogotá", "Medellín", "Cali", "Cartagena"];
+const CIUDAD_OTRO = "Otro";
+const ciudades = [
+  "Bucaramanga",
+  "Bogotá",
+  "Medellín",
+  "Barranquilla",
+  "Cali",
+  "Floridablanca",
+  "Piedecuesta",
+  "Barichara",
+  "Girón",
+];
 
 function PublicarPropiedadForm() {
   const router = useRouter();
@@ -21,7 +32,8 @@ function PublicarPropiedadForm() {
   const [titulo, setTitulo] = useState("");
   const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
-  const [ciudad, setCiudad] = useState<string>("Bucaramanga");
+  const [ciudad, setCiudad] = useState<string>(ciudades[0] ?? "Bucaramanga");
+  const [ciudadLibre, setCiudadLibre] = useState("");
   const [barrio, setBarrio] = useState("");
   const [tipo, setTipo] = useState<string>("Apartamento");
   const [habitaciones, setHabitaciones] = useState("3");
@@ -63,13 +75,22 @@ function PublicarPropiedadForm() {
 
       const numericPrecio = Number(String(precio).replace(/\D/g, "")) || 0;
 
+      const finalCiudad =
+        ciudad === CIUDAD_OTRO ? ciudadLibre.trim() : ciudad;
+
+      if (ciudad === CIUDAD_OTRO && !finalCiudad) {
+        setError("Por favor escribe la ciudad si seleccionas 'Otro'.");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         slug,
         titulo,
         descripcionCorta: descripcion.slice(0, 200),
         descripcionLarga: descripcion,
         precio: numericPrecio,
-        ciudad,
+        ciudad: finalCiudad,
         tipo,
         barrio: barrio.trim() || "",
         metros: Number(metros || 0),
@@ -87,8 +108,8 @@ function PublicarPropiedadForm() {
         entorno_archivos: entornoDocs,
         planos_urls: planosUrls,
         licencia_archivos: licenciaArchivos,
-        lat: lat ?? 4.60971,
-        lng: lng ?? -74.08175,
+        lat: lat ?? 7.1250,
+        lng: lng ?? -73.1190,
       };
 
       let insertedId: string | null = null;
@@ -156,7 +177,17 @@ function PublicarPropiedadForm() {
             ? String(row.precio).replace(/\B(?=(\d{3})+(?!\d))/g, ".")
             : "",
         );
-        setCiudad(row.ciudad ?? "Bucaramanga");
+        const rawCiudad = row.ciudad ?? "";
+        if (ciudades.includes(rawCiudad)) {
+          setCiudad(rawCiudad);
+          setCiudadLibre("");
+        } else if (rawCiudad) {
+          setCiudad(CIUDAD_OTRO);
+          setCiudadLibre(rawCiudad);
+        } else {
+          setCiudad(ciudades[0] ?? "Bucaramanga");
+          setCiudadLibre("");
+        }
         setTipo(row.tipo ?? "Apartamento");
         setBarrio(row.barrio ?? "");
         setMetros(row.metros?.toString() ?? "0");
@@ -252,8 +283,22 @@ function PublicarPropiedadForm() {
                           {c}
                         </SelectItem>
                       ))}
+                      <SelectItem value={CIUDAD_OTRO}>{CIUDAD_OTRO}</SelectItem>
                     </SelectContent>
                   </Select>
+                  {ciudad === CIUDAD_OTRO && (
+                    <div className="mt-2 space-y-1.5">
+                      <label className="text-[11px] font-medium text-slate-500">
+                        Ciudad (escribe)
+                      </label>
+                      <Input
+                        value={ciudadLibre}
+                        onChange={(e) => setCiudadLibre(e.target.value)}
+                        placeholder="Ej: Bucaramanga"
+                        className="border-slate-300 bg-white text-sm"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -804,9 +849,14 @@ function MapPicker({
         if (mapRef.current) return;
         if (!mapboxgl.accessToken) return;
 
-        const lat = initialLat != null ? Number(initialLat) : 4.60971;
-        const lng = initialLng != null ? Number(initialLng) : -74.08175;
-        const center: [number, number] = Number.isNaN(lng) || Number.isNaN(lat) ? [-74.08175, 4.60971] : [lng, lat];
+        const DEFAULT_LAT = 7.1250; // Bucaramanga
+        const DEFAULT_LNG = -73.1190; // Bucaramanga
+        const resolvedLat = initialLat != null ? Number(initialLat) : DEFAULT_LAT;
+        const resolvedLng = initialLng != null ? Number(initialLng) : DEFAULT_LNG;
+        const center: [number, number] = [
+          Number.isNaN(resolvedLng) ? DEFAULT_LNG : resolvedLng,
+          Number.isNaN(resolvedLat) ? DEFAULT_LAT : resolvedLat,
+        ];
 
         const m = new mapboxgl.Map({
           container: node,
@@ -817,12 +867,13 @@ function MapPicker({
         mapRef.current = m;
         m.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }));
 
-        if (initialLat != null && initialLng != null && !Number.isNaN(Number(initialLat)) && !Number.isNaN(Number(initialLng))) {
-          const mk = new mapboxgl.Marker({ color: "#0A2540" })
-            .setLngLat([Number(initialLng), Number(initialLat)])
-            .addTo(m);
-          markerRef.current = mk;
-        }
+        // Mostrar marcador en la ubicación inicial (o Bucaramanga si no hay coords)
+        const latForMarker = Number.isNaN(resolvedLat) ? DEFAULT_LAT : resolvedLat;
+        const lngForMarker = Number.isNaN(resolvedLng) ? DEFAULT_LNG : resolvedLng;
+        const mk = new mapboxgl.Marker({ color: "#0A2540" })
+          .setLngLat([lngForMarker, latForMarker])
+          .addTo(m);
+        markerRef.current = mk;
 
         m.on("click", (e) => {
           const { lng: lngClick, lat: latClick } = e.lngLat;

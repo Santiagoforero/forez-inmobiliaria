@@ -18,7 +18,18 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ReorderableImagePreviews } from "@/components/FileUploadPreviews";
 
-const ciudades = ["Bucaramanga", "Bogotá", "Medellín", "Cali", "Cartagena"];
+const CIUDAD_OTRO = "Otro";
+const ciudades = [
+  "Bucaramanga",
+  "Bogotá",
+  "Medellín",
+  "Barranquilla",
+  "Cali",
+  "Floridablanca",
+  "Piedecuesta",
+  "Barichara",
+  "Girón",
+];
 
 function PublicarProyectoForm() {
   const router = useRouter();
@@ -28,7 +39,8 @@ function PublicarProyectoForm() {
   const [descripcion, setDescripcion] = useState("");
   const [precio, setPrecio] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
-  const [ciudad, setCiudad] = useState<string>("Bucaramanga");
+  const [ciudad, setCiudad] = useState<string>(ciudades[0] ?? "Bucaramanga");
+  const [ciudadLibre, setCiudadLibre] = useState("");
   const [estado, setEstado] = useState<string>("Preventa");
   const [categoria, setCategoria] = useState<string>("Residencial");
   const [fechaEntrega, setFechaEntrega] = useState("");
@@ -66,12 +78,21 @@ function PublicarProyectoForm() {
 
       const numericPrecio = Number(String(precio).replace(/\D/g, "")) || null;
 
+      const finalCiudad =
+        ciudad === CIUDAD_OTRO ? ciudadLibre.trim() : ciudad;
+
+      if (ciudad === CIUDAD_OTRO && !finalCiudad) {
+        setError("Por favor escribe la ciudad si seleccionas 'Otro'.");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         slug,
         titulo,
         descripcion,
         precio: numericPrecio,
-        ciudad,
+        ciudad: finalCiudad,
         estado,
         categoria,
         fecha_entrega_estimada: fechaEntrega || null,
@@ -162,7 +183,17 @@ function PublicarProyectoForm() {
             : "",
         );
         setVideoUrl(row.video_url ?? "");
-        setCiudad(row.ciudad ?? "Bucaramanga");
+        const rawCiudad = row.ciudad ?? "";
+        if (ciudades.includes(rawCiudad)) {
+          setCiudad(rawCiudad);
+          setCiudadLibre("");
+        } else if (rawCiudad) {
+          setCiudad(CIUDAD_OTRO);
+          setCiudadLibre(rawCiudad);
+        } else {
+          setCiudad(ciudades[0] ?? "Bucaramanga");
+          setCiudadLibre("");
+        }
         setEstado(row.estado ?? "Preventa");
         setCategoria(row.categoria ?? "Residencial");
         setFechaEntrega(row.fecha_entrega_estimada ?? "");
@@ -239,8 +270,22 @@ function PublicarProyectoForm() {
                           {c}
                         </SelectItem>
                       ))}
+                      <SelectItem value={CIUDAD_OTRO}>{CIUDAD_OTRO}</SelectItem>
                     </SelectContent>
                   </Select>
+                  {ciudad === CIUDAD_OTRO && (
+                    <div className="mt-2 space-y-1.5">
+                      <label className="text-[11px] font-medium text-slate-500">
+                        Ciudad (escribe)
+                      </label>
+                      <Input
+                        value={ciudadLibre}
+                        onChange={(e) => setCiudadLibre(e.target.value)}
+                        placeholder="Ej: Bucaramanga"
+                        className="border-slate-300 bg-white text-sm"
+                      />
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-slate-600">
@@ -740,9 +785,14 @@ function MapPicker({
         if (mapRef.current) return;
         if (!mapboxgl.accessToken) return;
 
-        const lat = initialLat != null ? Number(initialLat) : 4.60971;
-        const lng = initialLng != null ? Number(initialLng) : -74.08175;
-        const center: [number, number] = Number.isNaN(lng) || Number.isNaN(lat) ? [-74.08175, 4.60971] : [lng, lat];
+        const DEFAULT_LAT = 7.1250; // Bucaramanga
+        const DEFAULT_LNG = -73.1190; // Bucaramanga
+        const resolvedLat = initialLat != null ? Number(initialLat) : DEFAULT_LAT;
+        const resolvedLng = initialLng != null ? Number(initialLng) : DEFAULT_LNG;
+        const center: [number, number] = [
+          Number.isNaN(resolvedLng) ? DEFAULT_LNG : resolvedLng,
+          Number.isNaN(resolvedLat) ? DEFAULT_LAT : resolvedLat,
+        ];
 
         const m = new mapboxgl.Map({
           container: node,
@@ -753,12 +803,13 @@ function MapPicker({
         mapRef.current = m;
         m.addControl(new mapboxgl.NavigationControl({ visualizePitch: true }));
 
-        if (initialLat != null && initialLng != null && !Number.isNaN(Number(initialLat)) && !Number.isNaN(Number(initialLng))) {
-          const mk = new mapboxgl.Marker({ color: "#0A2540" })
-            .setLngLat([Number(initialLng), Number(initialLat)])
-            .addTo(m);
-          markerRef.current = mk;
-        }
+        // Mostrar marcador en la ubicación inicial (o Bucaramanga si no hay coords)
+        const latForMarker = Number.isNaN(resolvedLat) ? DEFAULT_LAT : resolvedLat;
+        const lngForMarker = Number.isNaN(resolvedLng) ? DEFAULT_LNG : resolvedLng;
+        const mk = new mapboxgl.Marker({ color: "#0A2540" })
+          .setLngLat([lngForMarker, latForMarker])
+          .addTo(m);
+        markerRef.current = mk;
 
         m.on("click", (e) => {
           const { lng: lngClick, lat: latClick } = e.lngLat;
