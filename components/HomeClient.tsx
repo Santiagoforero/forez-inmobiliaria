@@ -81,6 +81,7 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
 
   return (
     <div className="relative overflow-hidden bg-slate-50">
+      <h1 className="sr-only">Forez Inmobiliaria</h1>
       {/* Inversión en movimiento: video a todo el ancho, justo bajo la barra */}
       <div className="w-full border-b border-slate-200 bg-black">
         <div className="relative h-[210px] w-full sm:h-[260px] lg:h-[360px]">
@@ -362,6 +363,38 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
           </div>
 
           <PropertyMap properties={initialProperties} heightClassName="h-[320px] sm:h-[420px] lg:h-[520px]" />
+        </div>
+      </section>
+
+      <section className="border-t border-slate-200 bg-white">
+        <div className="mx-auto max-w-6xl px-4 py-10 text-sm text-slate-700 sm:px-6 lg:px-8 lg:py-14">
+          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
+            Forez Inmobiliaria: asesoría y oportunidades en Colombia
+          </h2>
+          <div className="mt-3 space-y-4 leading-7">
+            <p>
+              Forez Inmobiliaria es una firma enfocada en la compra, venta y
+              acompañamiento de inversión inmobiliaria en Colombia. Trabajamos
+              con un portafolio curado de apartamentos, casas, lotes y proyectos
+              sobre planos, con especial atención a la calidad del activo, la
+              ubicación y el potencial de valorización.
+            </p>
+            <p>
+              Nuestro equipo acompaña procesos en ciudades como Bucaramanga y su
+              área metropolitana, Bogotá, Medellín, Cali y otras zonas clave del
+              país. Analizamos variables prácticas que influyen en la decisión:
+              conectividad, oferta de servicios, dinámica comercial, entorno y
+              comparables de mercado, para que cada cliente tenga claridad antes
+              de comprar o vender.
+            </p>
+            <p>
+              Si buscas vivienda o estás construyendo patrimonio, en FOREZ
+              encontrarás opciones con información completa: imágenes, detalles,
+              contexto del entorno, documentación cuando aplica y asesoría
+              personalizada. Nuestro objetivo es ayudarte a tomar decisiones
+              informadas, con criterio técnico y visión de largo plazo.
+            </p>
+          </div>
         </div>
       </section>
     </div>

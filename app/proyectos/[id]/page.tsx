@@ -77,9 +77,8 @@ async function fetchProjectBySlug(slug: string): Promise<ProjectRow | null> {
 }
 
 function buildProjectSeoTitle(project: ProjectRow) {
-  const tipo = project.categoria || "Proyecto";
   const ciudad = project.ciudad || "Colombia";
-  return `${tipo} en ${ciudad} - ${project.estado} | FOREZ`;
+  return `${project.titulo} en ${ciudad} | Proyecto inmobiliario | Forez Inmobiliaria`;
 }
 
 function buildProjectSeoText(project: ProjectRow) {
@@ -183,24 +182,11 @@ export default async function ProyectoPage({ params }: ParamsProps) {
 
   const projectJsonLd = {
     "@context": "https://schema.org",
-    "@type": "Residence",
+    "@type": "Place",
     name: project.titulo,
     description: project.descripcion,
     url: `${BASE_URL}/proyectos/${project.slug || identifier}`,
     image: project.images,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: project.ciudad,
-      addressCountry: "CO",
-    },
-    offers:
-      typeof project.precio === "number"
-        ? {
-            "@type": "Offer",
-            priceCurrency: "COP",
-            price: project.precio,
-          }
-        : undefined,
     geo:
       project.lat != null && project.lng != null
         ? {

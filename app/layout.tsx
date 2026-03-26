@@ -14,9 +14,41 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Forez Inmobiliaria - Propiedades premium en Colombia",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.forez.com.co"),
+  title: {
+    default:
+      "Forez Inmobiliaria | Compra y venta de propiedades en Bucaramanga, Bogotá y Colombia",
+    template: "%s | Forez Inmobiliaria",
+  },
   description:
-    "Forez Inmobiliaria: compra y venta de propiedades premium en Bucaramanga, Bogotá, Medellín y más ciudades de Colombia.",
+    "Forez Inmobiliaria: expertos en compra y venta de apartamentos, casas y proyectos en Bucaramanga, Bogotá y Colombia. Encuentra las mejores oportunidades inmobiliarias.",
+  robots: {
+    index: true,
+    follow: true,
+  },
+  authors: [{ name: "Forez Inmobiliaria" }],
+  openGraph: {
+    siteName: "Forez Inmobiliaria",
+    title: "Forez Inmobiliaria",
+    description:
+      "Forez Inmobiliaria: expertos en compra y venta de apartamentos, casas y proyectos en Bucaramanga, Bogotá y Colombia. Encuentra las mejores oportunidades inmobiliarias.",
+    url: "https://www.forez.com.co",
+    type: "website",
+    locale: "es_CO",
+    images: [{ url: "/favicon-192.png", width: 192, height: 192 }],
+  },
+  twitter: {
+    card: "summary",
+    title: "Forez Inmobiliaria",
+    images: ["/favicon-192.png"],
+  },
+  icons: {
+    icon: [
+      { url: "/favicono.ico", sizes: "any" },
+      { url: "/favicon-192.png", type: "image/png", sizes: "192x192" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
 };
 
 export default async function RootLayout({
@@ -25,12 +57,23 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   await ensureSeedOnBoot();
+  const orgJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    name: "Forez Inmobiliaria",
+    url: "https://www.forez.com.co",
+    logo: "https://www.forez.com.co/favicon-192.png",
+  };
   return (
     <html lang="es" className="overflow-x-hidden">
       <body
         className={`${inter.variable} min-h-screen overflow-x-hidden bg-slate-50 font-sans text-slate-900 antialiased`}
       >
         <div className="flex min-h-screen flex-col bg-linear-to-b from-slate-50 via-white to-slate-100">
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+          />
           <Navbar />
           <main className="flex-1">{children}</main>
           <section className="border-t border-slate-200 bg-slate-50">

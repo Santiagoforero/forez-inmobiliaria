@@ -18,7 +18,7 @@ function buildPropertySeoTitle(property: Property) {
   const tipo = property.tipo || "Propiedad";
   const ciudad = property.ciudad || "Colombia";
   const barrio = property.barrio || "Zona premium";
-  return `${tipo} en ${ciudad} - ${barrio} | FOREZ`;
+  return `${tipo} en ${ciudad} - ${barrio} | Forez Inmobiliaria`;
 }
 
 function buildPropertySeoText(property: Property) {
@@ -130,7 +130,7 @@ export default async function PropertyPage({ params }: ParamsProps) {
   const seoText = buildPropertySeoText(property);
   const propertyJsonLd = {
     "@context": "https://schema.org",
-    "@type": "RealEstateListing",
+    "@type": "Product",
     name: property.titulo,
     description: property.descripcionCorta || property.descripcionLarga,
     url: `${BASE_URL}/propiedades/${property.slug || identifier}`,
@@ -139,24 +139,15 @@ export default async function PropertyPage({ params }: ParamsProps) {
       "@type": "Offer",
       priceCurrency: "COP",
       price: property.precio,
-      availability: "https://schema.org/InStock",
     },
-    itemOffered: {
-      "@type": "Apartment",
-      numberOfRooms: property.habitaciones,
-      numberOfBathroomsTotal: property.banos,
-      floorSize: {
-        "@type": "QuantitativeValue",
-        value: property.metros,
-        unitCode: "MTK",
-      },
-    },
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: property.ciudad,
-      streetAddress: property.barrio || undefined,
-      addressCountry: "CO",
-    },
+    category: property.tipo,
+    additionalProperty: [
+      { "@type": "PropertyValue", name: "Ciudad", value: property.ciudad },
+      { "@type": "PropertyValue", name: "Barrio", value: property.barrio ?? "" },
+      { "@type": "PropertyValue", name: "Habitaciones", value: String(property.habitaciones) },
+      { "@type": "PropertyValue", name: "Baños", value: String(property.banos) },
+      { "@type": "PropertyValue", name: "Metros", value: `${property.metros} m²` },
+    ],
   };
 
   return (
