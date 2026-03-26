@@ -16,6 +16,7 @@ import {
 
 import type { Property } from "@/lib/properties";
 import { EntornoPanel } from "@/components/EntornoPanel";
+import { LocationMapSection } from "@/components/LocationMapSection";
 import type { MediaItem, MediaViewerType } from "@/components/MediaViewerModal";
 import { MediaViewerModal } from "@/components/MediaViewerModal";
 import { Badge } from "@/components/ui/badge";
@@ -530,44 +531,18 @@ export default function PropertyDetail({
         lng={property.coords?.lng}
       />
 
-      <section className="bg-slate-50">
-        <div className="mx-auto max-w-6xl px-4 pb-10 sm:px-6 lg:px-8 lg:pb-14">
-          <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
-            Ubicación
-          </h2>
-          <p className="mt-2 text-sm text-slate-600">
-            Ubicación aproximada y contexto de la zona.
-          </p>
-          <div className="mt-6 space-y-2">
-            <div className="relative aspect-video overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-              <iframe
-                src={`https://www.google.com/maps?q=${property.coords.lat},${property.coords.lng}&output=embed`}
-                title="Mapa de ubicación"
-                loading="lazy"
-                className="absolute inset-0 h-full w-full"
-              />
-            </div>
-            <button
-              type="button"
-              onClick={() =>
-                openMediaViewer(
-                  [
-                    {
-                      type: "embed",
-                      url: `https://www.google.com/maps?q=${property.coords.lat},${property.coords.lng}&output=embed`,
-                      title: "Mapa de ubicación",
-                    },
-                  ],
-                  0,
-                )
-              }
-              className="text-sm font-semibold text-sky-700 hover:underline"
-            >
-              Ver mapa en grande
-            </button>
-          </div>
-        </div>
-      </section>
+      <LocationMapSection
+        lat={property.coords?.lat}
+        lng={property.coords?.lng}
+        title="Ubicación"
+        subtitle="Ubicación aproximada y contexto de la zona."
+        onOpenInViewer={(mapUrl) =>
+          openMediaViewer(
+            [{ type: "embed", url: mapUrl, title: "Mapa de ubicación" }],
+            0,
+          )
+        }
+      />
 
       {similares.length > 0 && (
         <section className="bg-slate-50">
@@ -607,7 +582,7 @@ export default function PropertyDetail({
                       {formatCOP(p.precio)}
                     </p>
                     <Link
-                      href={`/propiedades/${p.remoteId ?? String(p.id)}`}
+                      href={`/propiedades/${p.slug || p.remoteId || String(p.id)}`}
                       className="text-xs font-semibold text-[#0A2540] hover:underline"
                     >
                       Ver detalles

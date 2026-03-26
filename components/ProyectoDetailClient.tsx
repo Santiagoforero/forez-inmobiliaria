@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AdminEditProjectButton } from "@/components/AdminEditProjectButton";
 import { EntornoPanel } from "@/components/EntornoPanel";
+import { LocationMapSection } from "@/components/LocationMapSection";
 import type { MediaItem, MediaViewerType } from "@/components/MediaViewerModal";
 import { MediaViewerModal } from "@/components/MediaViewerModal";
 import { Button } from "@/components/ui/button";
@@ -457,50 +458,18 @@ export function ProyectoDetailClient({ project }: { project: ProjectForDetail })
         </div>
       </section>
 
-      {/* Mapa contextual: ubicación del proyecto en Google Maps */}
-      {project.lat != null &&
-        project.lng != null &&
-        !Number.isNaN(Number(project.lat)) &&
-        !Number.isNaN(Number(project.lng)) && (
-          <section className="bg-slate-50">
-            <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-              <h2 className="text-xl font-semibold text-slate-900 sm:text-2xl">
-                Ubicación
-              </h2>
-              <p className="mt-2 text-sm text-slate-600">
-                Ubicación de referencia del proyecto en el sector.
-              </p>
-              <div className="mt-6 space-y-2">
-                <div className="relative aspect-video overflow-hidden rounded-xl border border-slate-200 bg-slate-100">
-                  <iframe
-                    src={`https://www.google.com/maps?q=${Number(project.lat)},${Number(project.lng)}&output=embed`}
-                    title="Mapa de ubicación del proyecto"
-                    loading="lazy"
-                    className="absolute inset-0 h-full w-full"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() =>
-                    openViewer(
-                      [
-                        {
-                          type: "embed",
-                          url: `https://www.google.com/maps?q=${Number(project.lat)},${Number(project.lng)}&output=embed`,
-                          title: "Mapa de ubicación del proyecto",
-                        },
-                      ],
-                      0,
-                    )
-                  }
-                  className="text-sm font-semibold text-sky-700 hover:underline"
-                >
-                  Ver mapa en grande
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
+      <LocationMapSection
+        lat={project.lat}
+        lng={project.lng}
+        title="Ubicación"
+        subtitle="Ubicación de referencia del proyecto en el sector."
+        onOpenInViewer={(mapUrl) =>
+          openViewer(
+            [{ type: "embed", url: mapUrl, title: "Mapa de ubicación del proyecto" }],
+            0,
+          )
+        }
+      />
 
       <section className="bg-slate-50">
         <EntornoPanel

@@ -66,7 +66,7 @@ export default async function ProyectosPage() {
                   <div className="relative aspect-[16/9] overflow-hidden">
                     <Image
                       src={p.images[0]}
-                      alt={p.titulo}
+                      alt={`Proyecto en ${p.ciudad} - ${p.categoria}`}
                       fill
                       sizes="(min-width: 1024px) 360px, 100vw"
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -92,7 +92,7 @@ export default async function ProyectosPage() {
                     </p>
                     <div className="mt-auto">
                       <Link
-                        href={`/proyectos/${p.id}`}
+                        href={`/proyectos/${p.slug || p.id}`}
                         className="text-xs font-semibold text-[#0A2540] hover:underline"
                       >
                         Ver detalles del proyecto

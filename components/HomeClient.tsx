@@ -44,6 +44,11 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
   }, [initialProperties]);
 
   const [presupuestoMaxNumero, setPresupuestoMaxNumero] = useState<number | null>(null);
+  const [videoSourceIndex, setVideoSourceIndex] = useState(0);
+  const videoSources = [
+    "https://videos.pexels.com/video-files/34017546/14428993_2560_1440_60fps.mp4",
+    "https://videos.pexels.com/video-files/3015510/3015510-hd_1920_1080_24fps.mp4",
+  ];
 
   const destacadas = useMemo(() => {
     const q = busquedaInteligente
@@ -86,7 +91,13 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
             loop
             playsInline
             preload="auto"
-            src="https://videos.pexels.com/video-files/34017546/14428993_2560_1440_60fps.mp4"
+            poster="https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?auto=format&fit=crop&w=1920&q=80"
+            src={videoSources[videoSourceIndex]}
+            onError={() =>
+              setVideoSourceIndex((prev) =>
+                prev < videoSources.length - 1 ? prev + 1 : prev,
+              )
+            }
           />
           <div className="pointer-events-none absolute inset-0 bg-linear-to-t from-black/70 via-black/30 to-transparent" />
           <div className="pointer-events-none absolute bottom-3 left-4 right-4 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-100 sm:bottom-4 sm:text-xs">
@@ -111,7 +122,6 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
                 alt="Propiedad de lujo en Colombia"
                 fill
                 priority
-                unoptimized
                 className="object-cover mix-blend-luminosity"
                 sizes="(min-width: 1024px) 900px, 0px"
               />
@@ -134,7 +144,6 @@ export default function HomeClient({ initialProperties }: HomeClientProps) {
                   alt="Propiedad destacada Forez"
                   fill
                   priority
-                  unoptimized
                   className="object-cover"
                   sizes="(max-width: 1023px) 76vw, 0px"
                 />

@@ -27,6 +27,8 @@ export function PropertyCard({
 
   const precioFormatted = formatter.format(property.precio);
   const mainImage = property.imagenes[0];
+  const detailPath = `/propiedades/${property.slug || property.remoteId || String(property.id)}`;
+  const imageAlt = `${property.tipo} en ${property.ciudad}${property.barrio ? ` - ${property.barrio}` : ""}`;
 
   return (
     <Card className="group flex h-full flex-col overflow-hidden rounded-lg border-slate-200 bg-white/95 shadow-md transition hover:shadow-xl">
@@ -37,7 +39,7 @@ export function PropertyCard({
       >
         <Image
           src={mainImage}
-          alt={property.titulo}
+          alt={imageAlt}
           fill
           sizes="(min-width: 1024px) 360px, 100vw"
           className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -74,7 +76,7 @@ export function PropertyCard({
           size="sm"
           className="mt-3 w-full bg-[#0A2540] text-xs font-semibold text-white hover:bg-[#103463]"
         >
-          <Link href={`/propiedades/${property.remoteId ?? String(property.id)}`}>Ver detalles</Link>
+          <Link href={detailPath}>Ver detalles</Link>
         </Button>
       </CardContent>
     </Card>

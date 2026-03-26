@@ -190,7 +190,7 @@ export default function PropertyMap({
       const ciudad = String(feature.properties.ciudad ?? "");
       const precio = Number(feature.properties.precio ?? 0);
       const imagen = String(feature.properties.imagen ?? "");
-      const propId = String(feature.properties.id ?? "");
+      const propPath = String(feature.properties.slug ?? feature.properties.id ?? "");
 
       const html = `
         <div style="display:flex; gap:12px; align-items:flex-start; background:#020617; border-radius:14px; padding:10px 12px; color:#e5e7eb; box-shadow:0 14px 38px rgba(15,23,42,0.7);">
@@ -201,7 +201,7 @@ export default function PropertyMap({
             <div style="font-size:12px; font-weight:700; color:#38bdf8; margin-bottom:8px;">${formatCOP(
               precio,
             )}</div>
-            <a href="/propiedades/${propId}" style="display:inline-block; font-size:12px; font-weight:700; color:#0f172a; background:#e5f3ff; padding:7px 10px; border-radius:999px; text-decoration:none;">Ver detalles</a>
+            <a href="/propiedades/${propPath}" style="display:inline-block; font-size:12px; font-weight:700; color:#0f172a; background:#e5f3ff; padding:7px 10px; border-radius:999px; text-decoration:none;">Ver detalles</a>
           </div>
         </div>
       `;

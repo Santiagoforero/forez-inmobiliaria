@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ReorderableImagePreviews } from "@/components/FileUploadPreviews";
+import { buildProjectSlug } from "@/lib/slug";
 
 const CIUDAD_OTRO = "Otro";
 const ciudades = [
@@ -57,12 +58,7 @@ function PublicarProyectoForm() {
   const [entornoDocs, setEntornoDocs] = useState<string[]>([]);
   const [entornoVideos, setEntornoVideos] = useState("");
 
-  const slugBase = titulo
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  const slugBase = buildProjectSlug({ titulo, ciudad, tipo: categoria });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -141,7 +137,7 @@ function PublicarProyectoForm() {
       }
 
       if (projectId) {
-        router.push(`/proyectos/${projectId}`);
+        router.push(`/proyectos/${slug}`);
       } else {
         router.push("/proyectos");
       }

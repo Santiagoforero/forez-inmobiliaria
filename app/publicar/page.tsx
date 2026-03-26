@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { ReorderableImagePreviews } from "@/components/FileUploadPreviews";
+import { buildPropertySlug } from "@/lib/slug";
 
 const CIUDAD_OTRO = "Otro";
 const ciudades = [
@@ -54,12 +55,7 @@ function PublicarPropiedadForm() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const slugBase = titulo
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
+  const slugBase = buildPropertySlug({ titulo, ciudad, tipo });
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -142,7 +138,7 @@ function PublicarPropiedadForm() {
       }
 
       if (insertedId) {
-        router.push(`/propiedades/${insertedId}`);
+        router.push(`/propiedades/${slug}`);
       }
     } catch (e: unknown) {
       setError(typeof (e as Error)?.message === "string" ? (e as Error).message : "Error publicando propiedad.");

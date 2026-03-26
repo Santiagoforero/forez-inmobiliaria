@@ -1,6 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { propiedades } from "@/lib/properties";
 import type { Property } from "@/lib/properties";
+import { buildPropertySlug } from "@/lib/slug";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
@@ -143,6 +144,53 @@ export async function getPropertyByIdFromSupabase(id: string): Promise<Property 
   } catch {
     return null;
   }
+}
+
+export async function getPropertyByIdentifierFromSupabase(
+  identifier: string,
+): Promise<{ property: Property | null; matchedBy: "id" | "slug" | null }> {
+  const raw = identifier.trim();
+  if (!raw) return { property: null, matchedBy: null };
+
+  const tryById = await getPropertyByIdFromSupabase(raw);
+  if (tryById) {
+    if (!tryById.slug?.trim()) {
+      const generatedSlug =
+        buildPropertySlug({
+          titulo: tryById.titulo,
+          ciudad: tryById.ciudad,
+          tipo: tryById.tipo,
+        }) || `propiedad-${Date.now()}`;
+      tryById.slug = generatedSlug;
+      if (tryById.remoteId) {
+        await supabase
+          .from("properties")
+          .update({ slug: generatedSlug })
+          .eq("id", tryById.remoteId);
+      }
+    }
+    return { property: tryById, matchedBy: "id" };
+  }
+
+  try {
+    const fullSelect =
+      "id,slug,titulo,descripcionCorta,descripcionLarga,precio,ciudad,tipo,barrio,metros,habitaciones,banos,images,video_url,tour360_url,categoria,tags,entorno,entorno_imagenes,entorno_videos,entorno_archivos,planos_urls,licencia_archivos,lat,lng";
+    const { data, error } = await supabase
+      .from("properties")
+      .select(fullSelect)
+      .eq("slug", raw)
+      .maybeSingle();
+    if (!error && data) {
+      return {
+        property: mapSupabaseRowToProperty(data as SupabasePropertyRow, 0),
+        matchedBy: "slug",
+      };
+    }
+  } catch {
+    // noop: fallback already returns null
+  }
+
+  return { property: null, matchedBy: null };
 }
 
 let seedPromise: Promise<void> | null = null;

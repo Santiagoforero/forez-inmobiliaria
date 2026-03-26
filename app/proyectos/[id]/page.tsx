@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { ProyectoDetailClient } from "@/components/ProyectoDetailClient";
+import { buildProjectSlug } from "@/lib/slug";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://forez.co";
+export const revalidate = 300;
 
 type ProjectRow = {
   id: string;
@@ -61,9 +64,37 @@ async function fetchProjectById(id: string): Promise<ProjectRow | null> {
   return null;
 }
 
+async function fetchProjectBySlug(slug: string): Promise<ProjectRow | null> {
+  const fullSelect =
+    "id, slug, titulo, descripcion, ciudad, estado, categoria, precio, fecha_entrega_estimada, images, planos_urls, licencia_url, licencia_archivos, video_url, entorno, entorno_imagenes, entorno_videos, entorno_archivos, lat, lng";
+  const { data, error } = await supabase
+    .from("projects")
+    .select(fullSelect)
+    .eq("slug", slug)
+    .maybeSingle<ProjectRow>();
+  if (error) return null;
+  return data ?? null;
+}
+
+function buildProjectSeoTitle(project: ProjectRow) {
+  const tipo = project.categoria || "Proyecto";
+  const ciudad = project.ciudad || "Colombia";
+  return `${tipo} en ${ciudad} - ${project.estado} | FOREZ`;
+}
+
+function buildProjectSeoText(project: ProjectRow) {
+  return `Este proyecto en ${project.ciudad} se desarrolla en una zona con alta proyección urbana y comercial, ideal para compradores que buscan una combinación entre valorización, calidad constructiva y visión de largo plazo. ${project.descripcion} En FOREZ evaluamos factores clave como conectividad, demanda residencial o corporativa, desarrollo del entorno y cronogramas de obra para ofrecer información clara y útil durante todo el proceso.
+
+Por su categoría ${project.categoria.toLowerCase()} y estado ${project.estado.toLowerCase()}, este activo se ajusta a diferentes estrategias: compra para habitar, diversificación patrimonial o entrada temprana a proyectos sobre planos. El comportamiento del mercado en ${project.ciudad} ha mostrado interés sostenido en desarrollos bien ubicados, especialmente cuando el proyecto cuenta con documentación, licencias y soporte visual completo para la toma de decisiones.
+
+Desde la óptica de inversión, evaluar el precio de entrada, la etapa de desarrollo y la dinámica del sector permite proyectar escenarios realistas de valorización y rentabilidad. El análisis del entorno inmediato también aporta señales relevantes sobre plusvalía futura, acceso a servicios y perfil de demanda en el mediano plazo.
+
+Si estás considerando invertir en ${project.ciudad}, este proyecto puede ser una alternativa competitiva dentro del portafolio local. En FOREZ te acompañamos con asesoría comercial y técnica para revisar comparables, resolver dudas legales y estructurar una decisión informada, con foco en seguridad, oportunidad y potencial de crecimiento.`;
+}
+
 export async function generateMetadata({ params }: ParamsProps): Promise<Metadata> {
-  const { id } = await params;
-  const project = await fetchProjectById(id);
+  const { id: identifier } = await params;
+  const project = (await fetchProjectById(identifier)) ?? (await fetchProjectBySlug(identifier));
 
   if (!project) {
     return {
@@ -72,7 +103,7 @@ export async function generateMetadata({ params }: ParamsProps): Promise<Metadat
     };
   }
 
-  const title = `${project.titulo} | Forez Inmobiliaria`;
+  const title = buildProjectSeoTitle(project);
   const rawDesc =
     project.descripcion ||
     "Proyecto inmobiliario en Colombia gestionado por Forez Inmobiliaria.";
@@ -90,7 +121,7 @@ export async function generateMetadata({ params }: ParamsProps): Promise<Metadat
     openGraph: {
       title,
       description,
-      url: `${BASE_URL}/proyectos/${id}`,
+      url: `${BASE_URL}/proyectos/${project.slug || identifier}`,
       type: "article",
       locale: "es_CO",
       images: [
@@ -111,9 +142,16 @@ export async function generateMetadata({ params }: ParamsProps): Promise<Metadat
 }
 
 export default async function ProyectoPage({ params }: ParamsProps) {
-  const { id } = await params;
+  const { id: identifier } = await params;
 
-  const project = await fetchProjectById(id);
+  let project = await fetchProjectById(identifier);
+  let matchedBy: "id" | "slug" | null = null;
+  if (project) {
+    matchedBy = "id";
+  } else {
+    project = await fetchProjectBySlug(identifier);
+    matchedBy = project ? "slug" : null;
+  }
 
   if (!project) {
     return (
@@ -128,6 +166,69 @@ export default async function ProyectoPage({ params }: ParamsProps) {
     );
   }
 
-  return <ProyectoDetailClient project={project} />;
+  if (!project.slug?.trim()) {
+    const generatedSlug =
+      buildProjectSlug({
+        titulo: project.titulo,
+        ciudad: project.ciudad,
+        tipo: project.categoria,
+      }) || `proyecto-${Date.now()}`;
+    project.slug = generatedSlug;
+    await supabase.from("projects").update({ slug: generatedSlug }).eq("id", project.id);
+  }
+
+  if (matchedBy === "id" && project.slug && project.slug !== identifier) {
+    permanentRedirect(`/proyectos/${project.slug}`);
+  }
+
+  const projectJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Residence",
+    name: project.titulo,
+    description: project.descripcion,
+    url: `${BASE_URL}/proyectos/${project.slug || identifier}`,
+    image: project.images,
+    address: {
+      "@type": "PostalAddress",
+      addressLocality: project.ciudad,
+      addressCountry: "CO",
+    },
+    offers:
+      typeof project.precio === "number"
+        ? {
+            "@type": "Offer",
+            priceCurrency: "COP",
+            price: project.precio,
+          }
+        : undefined,
+    geo:
+      project.lat != null && project.lng != null
+        ? {
+            "@type": "GeoCoordinates",
+            latitude: Number(project.lat),
+            longitude: Number(project.lng),
+          }
+        : undefined,
+  };
+
+  return (
+    <>
+      <ProyectoDetailClient project={project} />
+      <section className="mx-auto max-w-6xl px-4 pb-14 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <h2 className="text-lg font-semibold text-slate-900 sm:text-xl">
+            Panorama inmobiliario en {project.ciudad}
+          </h2>
+          <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-700">
+            {buildProjectSeoText(project)}
+          </p>
+        </div>
+      </section>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(projectJsonLd) }}
+      />
+    </>
+  );
 }
 
