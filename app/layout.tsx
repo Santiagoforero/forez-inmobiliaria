@@ -89,7 +89,7 @@ export default async function RootLayout({
               <span className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-3">
                 <span>Propiedades premium en Colombia.</span>
                 <span>forezinmobiliaria@gmail.com</span>
-                <span>+57 301 827 2954</span>
+                <span>+57 321 361 3351</span>
               </span>
             </div>
           </footer>

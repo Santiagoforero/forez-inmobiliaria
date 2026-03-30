@@ -10,7 +10,7 @@ export default function WhatsAppFloatingButton() {
       aria-label="WhatsApp Forez"
       onClick={() => {
         window.open(
-          "https://wa.me/573018272954?text=Hola,%20quiero%20información%20sobre%20propiedades%20en%20Forez",
+          "https://wa.me/573213613351?text=Hola,%20quiero%20información%20sobre%20propiedades%20en%20Forez",
           "_blank",
         );
       }}

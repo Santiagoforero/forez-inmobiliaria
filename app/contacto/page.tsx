@@ -179,7 +179,7 @@ export default function ContactPage() {
                     <span className="font-medium text-slate-700">
                       Teléfono:
                     </span>{" "}
-                    +57 301 827 2954
+                    +57 321 361 3351
                   </p>
                 </div>
               </CardContent>
